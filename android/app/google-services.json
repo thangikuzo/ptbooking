@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "501388421930",
+    "project_id": "pt-booking-app-6859b",
+    "storage_bucket": "pt-booking-app-6859b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:501388421930:android:e6f26350a253e720044c53",
+        "android_client_info": {
+          "package_name": "com.example.ptbooking"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "501388421930-clqtjsfgplcmt8grnr8b0hgl6d16q0qj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.ptbooking",
+            "certificate_hash": "05611cfd389fbcd000daed72277ae835ce4071a9"
+          }
+        },
+        {
+          "client_id": "501388421930-610ost62oop0k4vu1p6pgigh1ej0s65p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCBtBwJtjvFtE32Z-2-sx7rOjTq4-UWq4Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "501388421930-610ost62oop0k4vu1p6pgigh1ej0s65p.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "501388421930-2irgi4dfqdue5d3hielhj6uimg67ehhl.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.ptbooking"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
