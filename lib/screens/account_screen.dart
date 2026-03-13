@@ -1,19 +1,34 @@
 import 'package:flutter/material.dart';
+import 'pt_registration_screen.dart';
 import '../services/auth_service.dart';
-import 'login_screen.dart'; // Để chuyển trang khi logout
+import 'login_screen.dart';
+import 'edit_profile_screen.dart';
 
 class AccountScreen extends StatelessWidget {
-  const AccountScreen({super.key});
+  final String userRole;
+
+  const AccountScreen({super.key, required this.userRole});
 
   @override
   Widget build(BuildContext context) {
     final AuthService _authService = AuthService();
-    final user = _authService.currentUser; // Giả sử bạn thêm getter trong auth_service (xem chú thích dưới)
+    final user = _authService.currentUser;
 
-    // Nếu chưa làm getter currentUser thì dùng tạm text tĩnh
     String displayName = user?.displayName ?? "Người dùng";
     String email = user?.email ?? "user@email.com";
     String? photoUrl = user?.photoURL;
+
+    // Dịch Role sang tiếng Việt cho đẹp
+    String roleDisplay = "Khách hàng";
+    Color roleColor = Colors.blueGrey;
+
+    if (userRole == 'PT') {
+      roleDisplay = "Huấn luyện viên (PT)";
+      roleColor = const Color(0xFFFCA311); // Màu cam
+    } else if (userRole == 'Admin') {
+      roleDisplay = "Quản trị viên";
+      roleColor = Colors.redAccent;
+    }
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -33,12 +48,30 @@ class AccountScreen extends StatelessWidget {
                     child: photoUrl == null ? const Icon(Icons.person, size: 40, color: Colors.white) : null,
                   ),
                   const SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(displayName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      Text(email, style: const TextStyle(color: Colors.grey)),
-                    ],
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(displayName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 2),
+                        Text(email, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                        const SizedBox(height: 6),
+
+                        // --- HIỂN THỊ ROLE Ở ĐÂY ---
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: roleColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: roleColor.withOpacity(0.5)),
+                          ),
+                          child: Text(
+                            roleDisplay,
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: roleColor),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -50,21 +83,39 @@ class AccountScreen extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
-                  _buildMenuItem(Icons.person_outline, "Chỉnh sửa hồ sơ", () {}),
+                  _buildMenuItem(Icons.person_outline, "Chỉnh sửa hồ sơ", () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+                    );
+                  }),
                   _buildMenuItem(Icons.lock_outline, "Đổi mật khẩu", () {}),
-                  _buildMenuItem(Icons.payment_outlined, "Phương thức thanh toán", () {}),
+
+                  // Chỉ User mới thấy phần thanh toán
+                  if (userRole == 'User')
+                    _buildMenuItem(Icons.payment_outlined, "Phương thức thanh toán", () {}),
+
+                  _buildMenuItem(Icons.sports, "Đăng ký trở thành PT", () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const PTRegistrationScreen()),
+                    );
+                  }),
+
+                  // Chỉ PT mới thấy phần cài đặt lịch dạy
+                  if (userRole == 'PT')
+                    _buildMenuItem(Icons.schedule, "Cài đặt giờ làm việc", () {}),
+
                   _buildMenuItem(Icons.settings_outlined, "Cài đặt ứng dụng", () {}),
                   const Divider(height: 30),
 
                   // Nút Đăng xuất
                   _buildMenuItem(Icons.logout, "Đăng xuất", () async {
-                    // Xử lý đăng xuất
                     await _authService.logout();
-
                     if (context.mounted) {
                       Navigator.of(context).pushAndRemoveUntil(
                         MaterialPageRoute(builder: (context) => const LoginScreen()),
-                            (route) => false, // Xóa sạch lịch sử back
+                            (route) => false,
                       );
                     }
                   }, isDestructive: true),
@@ -77,7 +128,6 @@ class AccountScreen extends StatelessWidget {
     );
   }
 
-  // Widget con để vẽ dòng menu
   Widget _buildMenuItem(IconData icon, String title, VoidCallback onTap, {bool isDestructive = false}) {
     return Card(
       elevation: 0,
