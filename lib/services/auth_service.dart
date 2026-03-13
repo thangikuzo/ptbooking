@@ -6,9 +6,28 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   User? get currentUser => _auth.currentUser;
+
   // THAY ĐỔI 1: Dùng Singleton .instance
   // (Không được dùng new GoogleSignIn() nữa)
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+
+  // --- THÊM HÀM NÀY ĐỂ LẤY ROLE TỪ FIRESTORE ---
+  Future<String?> getUserRole() async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      try {
+        DocumentSnapshot doc = await _firestore.collection('users').doc(user.uid).get();
+        if (doc.exists) {
+          Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
+          return data?['role'] as String?;
+        }
+      } catch (e) {
+        print("Lỗi khi lấy Role: $e");
+      }
+    }
+    return null; // Trả về null nếu có lỗi hoặc không tìm thấy
+  }
+  // ----------------------------------------------
 
   Future<String?> loginWithGoogle() async {
     try {

@@ -11,7 +11,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   // Trạng thái
-  bool isLogin = true; // true: Đăng nhập, false: Đăng ký
+  bool isLogin = true;
   bool isLoading = false;
   bool isPasswordVisible = false;
 
@@ -24,9 +24,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final AuthService _authService = AuthService();
   final _formKey = GlobalKey<FormState>();
 
-  // Màu chủ đạo (Bạn có thể đổi màu theo ý thích)
-  final Color primaryColor = const Color(0xFF2E3B55); // Màu xanh đậm
-  final Color accentColor = const Color(0xFFFCA311);  // Màu cam năng động
+  final Color primaryColor = const Color(0xFF2E3B55);
+  final Color accentColor = const Color(0xFFFCA311);
 
   // Xử lý Submit
   void _submitForm() async {
@@ -35,7 +34,6 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => isLoading = true);
     String? errorMessage;
 
-    // Tắt bàn phím
     FocusScope.of(context).unfocus();
 
     if (isLogin) {
@@ -45,12 +43,12 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _passwordController.text.trim(),
       );
     } else {
-      // Đăng ký
+      // Đăng ký: Mặc định ai cũng là User hết
       errorMessage = await _authService.register(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
         name: _nameController.text.trim(),
-        role: 'User', // Mặc định tạo là User, muốn làm PT phải đăng ký riêng
+        role: 'User', // <-- Đã đổi thành mặc định là User
       );
     }
 
@@ -63,7 +61,12 @@ class _LoginScreenState extends State<LoginScreen> {
           backgroundColor: Colors.green,
         ),
       );
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => MainWrapper()));
+
+      // LẤY ROLE TỪ SERVER ĐỂ ĐIỀU HƯỚNG
+      String? role = await _authService.getUserRole();
+      if (mounted) {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => MainWrapper(userRole: role ?? 'User')));
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
@@ -78,16 +81,19 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => isLoading = false);
 
     if (result == null) {
-      // Thành công thật sự (trả về null)
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Login Google thành công!"), backgroundColor: Colors.green),
       );
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const MainWrapper()),
-      );
+
+      // LẤY ROLE SAU KHI LOGIN GOOGLE
+      String? role = await _authService.getUserRole();
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => MainWrapper(userRole: role ?? 'User')),
+        );
+      }
     } else if (result == "cancel") {
-      // Người dùng hủy
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Bạn đã hủy đăng nhập"),
@@ -96,7 +102,6 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       );
     } else {
-      // Lỗi thật sự
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Lỗi: $result"), backgroundColor: Colors.red),
       );
@@ -117,18 +122,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // 1. Header: Logo hoặc Text lớn
                   Icon(Icons.fitness_center, size: 80, color: primaryColor),
                   const SizedBox(height: 10),
                   Text(
                     "PT BOOKING",
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: primaryColor,
-                      letterSpacing: 1.5,
-                    ),
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: primaryColor, letterSpacing: 1.5),
                   ),
                   const SizedBox(height: 5),
                   Text(
@@ -138,7 +137,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 40),
 
-                  // 2. Input Fields
                   if (!isLogin) ...[
                     _buildTextField(
                       controller: _nameController,
@@ -146,6 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       icon: Icons.person_outline,
                     ),
                     const SizedBox(height: 16),
+                    // ĐÃ XÓA DROPDOWN Ở ĐÂY CHO GỌN GÀNG!
                   ],
 
                   _buildTextField(
@@ -169,19 +168,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                   ),
 
-                  // Quên mật khẩu (chỉ hiện khi login)
                   if (isLogin)
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed: () {}, // Chưa làm chức năng này
+                        onPressed: () {},
                         child: Text("Quên mật khẩu?", style: TextStyle(color: primaryColor)),
                       ),
                     )
                   else
                     const SizedBox(height: 20),
 
-                  // 3. Main Action Button
                   SizedBox(
                     height: 50,
                     child: ElevatedButton(
@@ -202,7 +199,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 30),
 
-                  // 4. Divider Or
                   Row(
                     children: [
                       Expanded(child: Divider(color: Colors.grey[300], thickness: 1)),
@@ -215,7 +211,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 30),
 
-                  // 5. Google Button
                   OutlinedButton.icon(
                     onPressed: isLoading ? null : _googleSignIn,
                     icon: const Icon(Icons.g_mobiledata, color: Colors.red, size: 32),
@@ -232,7 +227,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 20),
 
-                  // 6. Toggle Login/Register
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -244,7 +238,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         onTap: () {
                           setState(() {
                             isLogin = !isLogin;
-                            _formKey.currentState?.reset(); // Xóa lỗi cũ
+                            _formKey.currentState?.reset();
                           });
                         },
                         child: Text(
@@ -266,7 +260,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // Widget con để vẽ TextField cho gọn code
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -299,10 +292,10 @@ class _LoginScreenState extends State<LoginScreen> {
         )
             : null,
         filled: true,
-        fillColor: Colors.grey[100], // Màu nền xám nhẹ
+        fillColor: Colors.grey[100],
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none, // Bỏ viền đen mặc định
+          borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -310,7 +303,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: primaryColor, width: 2), // Viền màu khi bấm vào
+          borderSide: BorderSide(color: primaryColor, width: 2),
         ),
       ),
     );
