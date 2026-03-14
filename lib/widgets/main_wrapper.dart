@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../screens/admin_dashboard.dart';
 import '../screens/home_screen.dart';
-import '../screens/category_screen.dart';
+import '../screens/challenge_screen.dart';
 import '../screens/history_screen.dart';
 import '../screens/account_screen.dart';
 
@@ -58,13 +58,13 @@ class _MainWrapperState extends State<MainWrapper> {
     else {
       _screens = [
         const HomeScreen(),
-        const CategoryScreen(),
+        const ChallengeScreen(),
         const HistoryScreen(),
         AccountScreen(userRole: widget.userRole),
       ];
       _navItems = const [
         BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'Trang chủ'),
-        BottomNavigationBarItem(icon: Icon(Icons.category_outlined), activeIcon: Icon(Icons.category), label: 'Danh mục'),
+        BottomNavigationBarItem(icon: Icon(Icons.emoji_events_outlined), activeIcon: Icon(Icons.emoji_events), label: 'Thử thách'),
         BottomNavigationBarItem(icon: Icon(Icons.history_outlined), activeIcon: Icon(Icons.history), label: 'Lịch sử'),
         BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'Tài khoản'),
       ];
