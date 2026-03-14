@@ -45,11 +45,13 @@ class _MainWrapperState extends State<MainWrapper> {
       _screens = [
         const Center(child: Text("Màn hình: Lịch dạy hôm nay (Dành cho PT)")),
         const Center(child: Text("Màn hình: Danh sách Học viên (Dành cho PT)")),
+        const ChallengeScreen(), // ---- MỚI NHÉT THÊM VÀO CHO PT ĐÂY ----
         AccountScreen(userRole: widget.userRole),
       ];
       _navItems = const [
         BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: 'Lịch dạy'),
         BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Học viên'),
+        BottomNavigationBarItem(icon: Icon(Icons.emoji_events), label: 'Thử thách'), // ---- THÊM ICON CHO PT ĐÂY ----
         BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Tài khoản'),
       ];
     }
@@ -87,7 +89,7 @@ class _MainWrapperState extends State<MainWrapper> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed,
+        type: BottomNavigationBarType.fixed, // fixed để nó không bị giật giật khi có 4 tab
         backgroundColor: Colors.white,
         selectedItemColor: const Color(0xFF2E3B55),
         unselectedItemColor: Colors.grey,

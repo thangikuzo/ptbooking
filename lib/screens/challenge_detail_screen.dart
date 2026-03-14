@@ -8,10 +8,11 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../models/challenge_model.dart';
 import '../services/auth_service.dart';
+import 'leaderboard_screen.dart';
 
 // Khuôn đúc Dữ liệu
 class SubmissionItem {
-  final String docId; // MỚI: Cần cái này để biết đang chấm điểm cho Đứa nào!
+  final String docId;
   final String userName;
   final String avatarUrl;
   final String videoUrl;
@@ -50,7 +51,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
   bool _isUploading = false;
   String? _currentUserRole;
   bool _isLoadingRole = true;
-  bool _hasSubmitted = false; // Cờ đánh dấu: Thằng này nộp bài chưa?
+  bool _hasSubmitted = false;
 
   @override
   void initState() {
@@ -98,12 +99,9 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
       var snapshot = await FirebaseFirestore.instance
           .collection('submissions')
           .where('challengeId', isEqualTo: widget.challenge.title)
-      // .orderBy('createdAt', descending: true) // NẾU HỒI NÃY COMMENT DÒNG NÀY THÌ CỨ ĐỂ YÊN NHÉ
           .get();
 
       List<SubmissionItem> loadedItems = [];
-
-      // 1. Chuẩn bị biến kiểm tra
       User? currentUser = FirebaseAuth.instance.currentUser;
       bool foundMySubmission = false;
 
@@ -118,7 +116,6 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
           timeStr = "${dt.day}/${dt.month}/${dt.year} - ${dt.hour}:${dt.minute.toString().padLeft(2, '0')}";
         }
 
-        // 2. CON BOT DÒ TÌM: Phát hiện có bài của mình rồi!
         if (currentUser != null && data['userId'] == currentUser.uid) {
           foundMySubmission = true;
         }
@@ -139,7 +136,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
         setState(() {
           _feedItems = loadedItems;
           _isLoadingFeed = false;
-          _hasSubmitted = foundMySubmission; // 3. Cập nhật cờ hiệu
+          _hasSubmitted = foundMySubmission;
         });
       }
     } catch (e) {
@@ -201,7 +198,33 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
     }
   }
 
-  // --- TRÙM CUỐI: HÀM MỞ BẢNG VÀ CHẤM ĐIỂM LÊN DB ---
+  // --- HÀM XÓA VIDEO DÀNH CHO PT ---
+  Future<void> _deleteSubmission(String docId) async {
+    bool confirm = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Xác nhận xóa"),
+        content: const Text("Bạn có chắc chắn muốn xóa bài nộp này không?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("HỦY")),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("XÓA", style: TextStyle(color: Colors.red))),
+        ],
+      ),
+    ) ?? false;
+
+    if (confirm) {
+      try {
+        await FirebaseFirestore.instance.collection('submissions').doc(docId).delete();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã xóa video!'), backgroundColor: Colors.red));
+          _loadSubmissionsFromFirebase();
+        }
+      } catch (e) {
+        debugPrint("Lỗi xóa video: $e");
+      }
+    }
+  }
+
   void _showGradingDialog(BuildContext context, String docId, String userName) {
     TextEditingController scoreController = TextEditingController();
     showDialog(
@@ -227,17 +250,16 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                 onPressed: () async {
                   int score = int.tryParse(scoreController.text.trim()) ?? 0;
-                  Navigator.pop(context); // Đóng bảng
+                  Navigator.pop(context);
 
-                  // CẬP NHẬT ĐIỂM LÊN FIREBASE
                   try {
                     await FirebaseFirestore.instance.collection('submissions').doc(docId).update({
                       'score': score,
-                      'status': 'Đã chấm', // Đổi trạng thái
+                      'status': 'Đã chấm',
                     });
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Chấm điểm thành công!'), backgroundColor: Colors.green));
-                      _loadSubmissionsFromFirebase(); // Tải lại feed để hiện điểm
+                      _loadSubmissionsFromFirebase();
                     }
                   } catch (e) {
                     debugPrint("Lỗi chấm điểm: $e");
@@ -259,109 +281,136 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(title: Text(widget.challenge.title, style: const TextStyle(color: Colors.black)), backgroundColor: Colors.amber.shade200, elevation: 0, iconTheme: const IconThemeData(color: Colors.black)),
-      body: ListView(
-        children: [
-          Container(
-            width: double.infinity, padding: const EdgeInsets.all(16.0), color: Colors.amber.shade200,
-            child: Column(
-              children: [
-                Image.network(widget.challenge.imageUrl, height: 120, fit: BoxFit.contain),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(color: Colors.green.shade100, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.green.shade700, width: 1)),
-                      child: Text('${widget.challenge.points} PT', style: TextStyle(color: Colors.green.shade800, fontWeight: FontWeight.bold, fontSize: 16)),
+
+      // TỐI ƯU HÓA: MỘT LISTVIEW.BUILDER DUY NHẤT BAO TRỌN GÓI
+      body: ListView.builder(
+        itemCount: 1 + (_isUploading ? 1 : 0) + _feedItems.length,
+        itemBuilder: (context, index) {
+
+          // HEADER: CỤC VÀNG
+          if (index == 0) {
+            return Container(
+              width: double.infinity, padding: const EdgeInsets.all(16.0), color: Colors.amber.shade200,
+              child: Column(
+                children: [
+                  Image.network(widget.challenge.imageUrl, height: 120, fit: BoxFit.contain),
+                  const SizedBox(height: 16),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => LeaderboardScreen(challengeTitle: widget.challenge.title)));
+                      },
+                      icon: const Icon(Icons.emoji_events, color: Colors.orange),
+                      label: const Text("XEM BẢNG XẾP HẠNG", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                      style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.orange, width: 2), backgroundColor: Colors.white),
                     ),
-                    if (_currentUserRole == 'PT')
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.purple), onPressed: () {},
-                        icon: const Icon(Icons.admin_panel_settings, color: Colors.white, size: 18), label: const Text("QUẢN LÝ", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                      )
-                    else
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(backgroundColor: _isJoined ? Colors.grey : Colors.green),
-                        onPressed: _isJoined ? null : _joinChallenge,
-                        child: Text(_isJoined ? "ĐÃ THAM GIA" : "THAM GIA", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                      )
-                  ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(color: Colors.green.shade100, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.green.shade700, width: 1)),
+                        child: Text('${widget.challenge.points} PT', style: TextStyle(color: Colors.green.shade800, fontWeight: FontWeight.bold, fontSize: 16)),
+                      ),
+                      if (_currentUserRole == 'PT')
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.purple), onPressed: () {},
+                          icon: const Icon(Icons.admin_panel_settings, color: Colors.white, size: 18), label: const Text("QUẢN LÝ", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        )
+                      else
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(backgroundColor: _isJoined ? Colors.grey : Colors.green),
+                          onPressed: _isJoined ? null : _joinChallenge,
+                          child: Text(_isJoined ? "ĐÃ THAM GIA" : "THAM GIA", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        )
+                    ],
+                  )
+                ],
+              ),
+            );
+          }
+
+          // VÒNG XOAY UPLOAD
+          if (_isUploading && index == 1) {
+            return const Padding(padding: EdgeInsets.all(40.0), child: Center(child: CircularProgressIndicator(color: Colors.redAccent)));
+          }
+
+          // DANH SÁCH BÀI NỘP
+          final videoIndex = index - 1 - (_isUploading ? 1 : 0);
+          if (videoIndex < 0 || videoIndex >= _feedItems.length) return const SizedBox.shrink();
+          final item = _feedItems[videoIndex];
+
+          return Card(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), elevation: 4, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), clipBehavior: Clip.antiAlias,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: Colors.blue.shade100,
+                    backgroundImage: item.avatarUrl.isNotEmpty ? NetworkImage(item.avatarUrl) : null,
+                    child: item.avatarUrl.isEmpty ? const Icon(Icons.person, color: Colors.blue) : null,
+                  ),
+                  title: Text(item.userName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text(item.timeString),
+                  // THÊM NÚT MENU XÓA DÀNH CHO PT
+                  trailing: _currentUserRole == 'PT'
+                      ? PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == 'delete') _deleteSubmission(item.docId);
+                    },
+                    itemBuilder: (BuildContext context) => [
+                      const PopupMenuItem(value: 'delete', child: Row(children: [Icon(Icons.delete, color: Colors.red), SizedBox(width: 8), Text("Xóa video này", style: TextStyle(color: Colors.red))])),
+                    ],
+                  )
+                      : null,
+                ),
+                AspectRatio(aspectRatio: item.controller.value.aspectRatio, child: VideoPlayer(item.controller)),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), color: Colors.grey.shade50,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.star_border_purple500, color: Colors.purple), const SizedBox(width: 8),
+                          Text("PT đánh giá: ", style: TextStyle(color: Colors.grey.shade700, fontStyle: FontStyle.italic)),
+                          Text(
+                            item.status == 'Đã chấm' ? '${item.score} Điểm' : item.status,
+                            style: TextStyle(fontWeight: FontWeight.bold, color: item.status == 'Đã chấm' ? Colors.green : Colors.orange),
+                          ),
+                        ],
+                      ),
+                      if (_currentUserRole == 'PT' && item.status != 'Đã chấm')
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0), minimumSize: const Size(80, 36)),
+                          onPressed: () => _showGradingDialog(context, item.docId, item.userName),
+                          child: const Text("CHẤM ĐIỂM", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                        )
+                    ],
+                  ),
                 )
               ],
             ),
-          ),
-
-          if (_feedItems.isEmpty && !_isUploading)
-            const Padding(padding: EdgeInsets.all(40.0), child: Center(child: Text("Chưa có ai nộp bài. Hãy là người đầu tiên!", style: TextStyle(color: Colors.grey))))
-          else
-            ListView.builder(
-              shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), itemCount: _feedItems.length + (_isUploading ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (_isUploading && index == 0) return const Padding(padding: EdgeInsets.all(40.0), child: Center(child: CircularProgressIndicator(color: Colors.redAccent)));
-                final videoIndex = _isUploading ? index - 1 : index;
-                final item = _feedItems[videoIndex];
-
-                return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), elevation: 4, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), clipBehavior: Clip.antiAlias,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Colors.blue.shade100,
-                          backgroundImage: item.avatarUrl.isNotEmpty ? NetworkImage(item.avatarUrl) : null,
-                          child: item.avatarUrl.isEmpty ? const Icon(Icons.person, color: Colors.blue) : null,
-                        ),
-                        title: Text(item.userName, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text(item.timeString),
-                        trailing: IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
-                      ),
-                      AspectRatio(aspectRatio: item.controller.value.aspectRatio, child: VideoPlayer(item.controller)),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), color: Colors.grey.shade50,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(Icons.star_border_purple500, color: Colors.purple), const SizedBox(width: 8),
-                                Text("PT đánh giá: ", style: TextStyle(color: Colors.grey.shade700, fontStyle: FontStyle.italic)),
-                                Text(
-                                  item.status == 'Đã chấm' ? '${item.score} Điểm' : item.status,
-                                  style: TextStyle(fontWeight: FontWeight.bold, color: item.status == 'Đã chấm' ? Colors.green : Colors.orange),
-                                ),
-                              ],
-                            ),
-                            // NẾU LÀ PT VÀ CHƯA CHẤM -> HIỆN NÚT CHẤM ĐIỂM
-                            if (_currentUserRole == 'PT' && item.status != 'Đã chấm')
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0), minimumSize: const Size(80, 36)),
-                                onPressed: () => _showGradingDialog(context, item.docId, item.userName), // GỌI HÀM BUNG BẢNG
-                                child: const Text("CHẤM ĐIỂM", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                              )
-                          ],
-                        ),
-                      )
-                    ],
-                  ),
-                );
-              },
-            ),
-        ],
+          );
+        },
       ),
       bottomNavigationBar: (_currentUserRole != 'PT' && _isJoined)
           ? Container(
         padding: const EdgeInsets.all(16), color: Colors.grey.shade200,
-        // KIỂM TRA CỜ HIỆU Ở ĐÂY
         child: _hasSubmitted
-            ? ElevatedButton.icon( // ĐÃ NỘP -> Nút xám, bấm vào vô dụng (null)
+            ? ElevatedButton.icon(
           onPressed: null,
           icon: const Icon(Icons.check_circle),
           label: const Text("BẠN ĐÃ NỘP BÀI", style: TextStyle(fontWeight: FontWeight.bold)),
           style: ElevatedButton.styleFrom(backgroundColor: Colors.grey, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
         )
-            : ElevatedButton.icon( // CHƯA NỘP -> Nút đỏ, cho phép up
+            : ElevatedButton.icon(
           onPressed: _pickVideo,
           icon: const Icon(Icons.video_call),
           label: const Text("TẢI VIDEO LÊN", style: TextStyle(fontWeight: FontWeight.bold)),
