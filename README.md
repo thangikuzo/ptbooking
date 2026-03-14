@@ -65,5 +65,5 @@
 
 ---
 <p align="center">
-  <i>"Transforming sweat into data. Every rep counts."</i>
+  <i>""Đừng tập luyện một mình, hãy để PTBooking biến mỗi giọt mồ hôi thành một con số trên bảng xếp hạng!" 🏆"</i>
 </p>
