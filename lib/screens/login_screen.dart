@@ -10,90 +10,124 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // Trạng thái
+
   bool isLogin = true;
   bool isLoading = false;
   bool isPasswordVisible = false;
 
-  // Controllers
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
 
-  // Logic & Service
   final AuthService _authService = AuthService();
   final _formKey = GlobalKey<FormState>();
 
   final Color primaryColor = const Color(0xFF2E3B55);
   final Color accentColor = const Color(0xFFFCA311);
 
-  // Xử lý Submit
+  /// =========================================================
+  /// 🚀 SUBMIT
+  /// =========================================================
   void _submitForm() async {
+
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => isLoading = true);
+
     String? errorMessage;
 
     FocusScope.of(context).unfocus();
 
     if (isLogin) {
-      // Đăng nhập
+
+      /// 🔹 LOGIN
       errorMessage = await _authService.login(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
+
     } else {
-      // Đăng ký: Mặc định ai cũng là User hết
+
+      /// 🔹 REGISTER → LUÔN ROLE USER
       errorMessage = await _authService.register(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
         name: _nameController.text.trim(),
-        role: 'User', // <-- Đã đổi thành mặc định là User
+        role: 'user', // 🔥 FIX QUAN TRỌNG
       );
     }
 
     setState(() => isLoading = false);
 
     if (errorMessage == null) {
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isLogin ? "Đăng nhập thành công!" : "Đăng ký thành công!"),
+          content: Text(isLogin
+              ? "Đăng nhập thành công!"
+              : "Đăng ký thành công!"),
           backgroundColor: Colors.green,
         ),
       );
 
-      // LẤY ROLE TỪ SERVER ĐỂ ĐIỀU HƯỚNG
+      /// 🔥 LẤY ROLE TỪ FIRESTORE
       String? role = await _authService.getUserRole();
+
       if (mounted) {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => MainWrapper(userRole: role ?? 'User')));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) =>
+                MainWrapper(userRole: role ?? 'user'), // 🔥 FIX
+          ),
+        );
       }
+
     } else {
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
 
-  // Xử lý Google Login
+  /// =========================================================
+  /// 🔥 GOOGLE LOGIN
+  /// =========================================================
   void _googleSignIn() async {
+
     setState(() => isLoading = true);
+
     String? result = await _authService.loginWithGoogle();
+
     setState(() => isLoading = false);
 
     if (result == null) {
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Login Google thành công!"), backgroundColor: Colors.green),
+        const SnackBar(
+          content: Text("Login Google thành công!"),
+          backgroundColor: Colors.green,
+        ),
       );
 
-      // LẤY ROLE SAU KHI LOGIN GOOGLE
       String? role = await _authService.getUserRole();
+
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => MainWrapper(userRole: role ?? 'User')),
+          MaterialPageRoute(
+            builder: (_) =>
+                MainWrapper(userRole: role ?? 'user'), // 🔥 FIX
+          ),
         );
       }
+
     } else if (result == "cancel") {
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Bạn đã hủy đăng nhập"),
@@ -101,42 +135,67 @@ class _LoginScreenState extends State<LoginScreen> {
           duration: Duration(seconds: 1),
         ),
       );
+
     } else {
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Lỗi: $result"), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text("Lỗi: $result"),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
 
+  /// =========================================================
+  /// 🧱 UI
+  /// =========================================================
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       backgroundColor: Colors.white,
+
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Form(
               key: _formKey,
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment:
+                CrossAxisAlignment.stretch,
                 children: [
-                  Icon(Icons.fitness_center, size: 80, color: primaryColor),
+
+                  Icon(Icons.fitness_center,
+                      size: 80,
+                      color: primaryColor),
+
                   const SizedBox(height: 10),
+
                   Text(
                     "PT BOOKING",
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: primaryColor, letterSpacing: 1.5),
+                    style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: primaryColor),
                   ),
+
                   const SizedBox(height: 5),
+
                   Text(
-                    isLogin ? "Chào mừng trở lại!" : "Tạo tài khoản mới",
+                    isLogin
+                        ? "Chào mừng trở lại!"
+                        : "Tạo tài khoản mới",
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                    style:
+                    TextStyle(color: Colors.grey[600]),
                   ),
+
                   const SizedBox(height: 40),
 
+                  /// 🔹 NAME
                   if (!isLogin) ...[
                     _buildTextField(
                       controller: _nameController,
@@ -144,17 +203,20 @@ class _LoginScreenState extends State<LoginScreen> {
                       icon: Icons.person_outline,
                     ),
                     const SizedBox(height: 16),
-                    // ĐÃ XÓA DROPDOWN Ở ĐÂY CHO GỌN GÀNG!
                   ],
 
+                  /// 🔹 EMAIL
                   _buildTextField(
                     controller: _emailController,
                     label: "Email",
                     icon: Icons.email_outlined,
-                    keyboardType: TextInputType.emailAddress,
+                    keyboardType:
+                    TextInputType.emailAddress,
                   ),
+
                   const SizedBox(height: 16),
 
+                  /// 🔹 PASSWORD
                   _buildTextField(
                     controller: _passwordController,
                     label: "Mật khẩu",
@@ -162,91 +224,86 @@ class _LoginScreenState extends State<LoginScreen> {
                     isPassword: true,
                     isPassVisible: isPasswordVisible,
                     onTogglePass: () {
-                      setState(() {
-                        isPasswordVisible = !isPasswordVisible;
-                      });
+                      setState(() =>
+                      isPasswordVisible =
+                      !isPasswordVisible);
                     },
                   ),
 
-                  if (isLogin)
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () {},
-                        child: Text("Quên mật khẩu?", style: TextStyle(color: primaryColor)),
-                      ),
-                    )
-                  else
-                    const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
+                  /// 🔥 BUTTON
                   SizedBox(
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: isLoading ? null : _submitForm,
+                      onPressed:
+                      isLoading ? null : _submitForm,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        elevation: 5,
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                          BorderRadius.circular(12),
+                        ),
                       ),
                       child: isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
+                          ? const CircularProgressIndicator(
+                          color: Colors.white)
                           : Text(
-                        isLogin ? "ĐĂNG NHẬP" : "ĐĂNG KÝ",
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                        isLogin
+                            ? "ĐĂNG NHẬP"
+                            : "ĐĂNG KÝ",
+                        style: const TextStyle(
+                            fontWeight:
+                            FontWeight.bold),
                       ),
                     ),
                   ),
 
                   const SizedBox(height: 30),
 
-                  Row(
-                    children: [
-                      Expanded(child: Divider(color: Colors.grey[300], thickness: 1)),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Text("HOẶC", style: TextStyle(color: Colors.grey[500])),
-                      ),
-                      Expanded(child: Divider(color: Colors.grey[300], thickness: 1)),
-                    ],
-                  ),
-                  const SizedBox(height: 30),
-
+                  /// 🔥 GOOGLE BUTTON
                   OutlinedButton.icon(
-                    onPressed: isLoading ? null : _googleSignIn,
-                    icon: const Icon(Icons.g_mobiledata, color: Colors.red, size: 32),
+                    onPressed:
+                    isLoading ? null : _googleSignIn,
+                    icon: const Icon(Icons.g_mobiledata,
+                        color: Colors.red, size: 32),
                     label: const Text(
                       "Tiếp tục với Google",
-                      style: TextStyle(color: Colors.black87, fontSize: 16),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      side: BorderSide(color: Colors.grey.shade300),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      style:
+                      TextStyle(color: Colors.black),
                     ),
                   ),
 
                   const SizedBox(height: 20),
 
+                  /// 🔄 SWITCH LOGIN/REGISTER
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment:
+                    MainAxisAlignment.center,
                     children: [
                       Text(
-                        isLogin ? "Chưa có tài khoản? " : "Đã có tài khoản? ",
-                        style: TextStyle(color: Colors.grey[600]),
+                        isLogin
+                            ? "Chưa có tài khoản? "
+                            : "Đã có tài khoản? ",
+                        style: TextStyle(
+                            color: Colors.grey[600]),
                       ),
                       GestureDetector(
                         onTap: () {
                           setState(() {
                             isLogin = !isLogin;
-                            _formKey.currentState?.reset();
+                            _formKey.currentState
+                                ?.reset();
                           });
                         },
                         child: Text(
-                          isLogin ? "Đăng ký ngay" : "Đăng nhập",
+                          isLogin
+                              ? "Đăng ký ngay"
+                              : "Đăng nhập",
                           style: TextStyle(
-                            color: accentColor,
-                            fontWeight: FontWeight.bold,
-                          ),
+                              color: accentColor,
+                              fontWeight:
+                              FontWeight.bold),
                         ),
                       ),
                     ],
@@ -260,6 +317,9 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  /// =========================================================
+  /// 🧩 TEXT FIELD
+  /// =========================================================
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -267,26 +327,35 @@ class _LoginScreenState extends State<LoginScreen> {
     bool isPassword = false,
     bool? isPassVisible,
     VoidCallback? onTogglePass,
-    TextInputType keyboardType = TextInputType.text,
+    TextInputType keyboardType =
+        TextInputType.text,
   }) {
     return TextFormField(
       controller: controller,
-      obscureText: isPassword && !(isPassVisible ?? false),
+      obscureText:
+      isPassword && !(isPassVisible ?? false),
       keyboardType: keyboardType,
       validator: (val) {
-        if (val == null || val.isEmpty) return "Vui lòng nhập $label";
-        if (label == "Email" && !val.contains("@")) return "Email không hợp lệ";
-        if (label == "Mật khẩu" && val.length < 6) return "Mật khẩu phải trên 6 ký tự";
+        if (val == null || val.isEmpty) {
+          return "Vui lòng nhập $label";
+        }
+        if (label == "Email" && !val.contains("@")) {
+          return "Email không hợp lệ";
+        }
+        if (label == "Mật khẩu" && val.length < 6) {
+          return "Mật khẩu ≥ 6 ký tự";
+        }
         return null;
       },
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, color: Colors.grey),
+        prefixIcon: Icon(icon),
         suffixIcon: isPassword
             ? IconButton(
           icon: Icon(
-            (isPassVisible ?? false) ? Icons.visibility : Icons.visibility_off,
-            color: Colors.grey,
+            (isPassVisible ?? false)
+                ? Icons.visibility
+                : Icons.visibility_off,
           ),
           onPressed: onTogglePass,
         )
@@ -296,14 +365,6 @@ class _LoginScreenState extends State<LoginScreen> {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: primaryColor, width: 2),
         ),
       ),
     );
