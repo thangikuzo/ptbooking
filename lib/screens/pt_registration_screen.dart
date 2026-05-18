@@ -1,63 +1,119 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'splash_screen.dart'; // Import để reload lại app
+import 'package:firebase_storage/firebase_storage.dart';
 
 class PTRegistrationScreen extends StatefulWidget {
   const PTRegistrationScreen({super.key});
 
   @override
-  State<PTRegistrationScreen> createState() => _PTRegistrationScreenState();
+  State<PTRegistrationScreen> createState() =>
+      _PTRegistrationScreenState();
 }
 
-class _PTRegistrationScreenState extends State<PTRegistrationScreen> {
+class _PTRegistrationScreenState
+    extends State<PTRegistrationScreen> {
+
   final _formKey = GlobalKey<FormState>();
   final _experienceController = TextEditingController();
   final _specialtyController = TextEditingController();
   final _bioController = TextEditingController();
+
+  File? _avatarFile;
   bool _isLoading = false;
 
-  void _submitApplication() async {
+  /// 📅 LỊCH
+  final List<String> weekdays =
+  ["T2","T3","T4","T5","T6","T7","CN"];
+
+  final Set<int> selectedDays = {};
+
+  /// ===================================================
+  /// 🖼 CHỌN AVATAR
+  /// ===================================================
+  Future<void> _pickAvatar() async {
+    final picked = await ImagePicker()
+        .pickImage(source: ImageSource.gallery);
+
+    if (picked != null) {
+      setState(() => _avatarFile = File(picked.path));
+    }
+  }
+
+  /// ===================================================
+  /// 🚀 SUBMIT
+  /// ===================================================
+  Future<void> _submitApplication() async {
+
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     try {
-      User? currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser != null) {
-        // 1. Cập nhật dữ liệu lên Firestore
-        await FirebaseFirestore.instance.collection('users').doc(currentUser.uid).update({
-          'role': 'Pending_PT', // Đổi Role thành chờ duyệt
-          'experience': _experienceController.text.trim(), // Lưu năm kinh nghiệm
-          'specialty': _specialtyController.text.trim(), // Lưu chuyên môn (Gym, Yoga...)
-          'bio': _bioController.text.trim(), // Lưu giới thiệu bản thân
-          'appliedAt': DateTime.now(), // Thời gian nộp đơn
-        });
+      final user = FirebaseAuth.instance.currentUser!;
+      String avatarUrl = "";
 
-        if (mounted) {
-          // 2. Báo thành công và Load lại app từ màn hình Splash
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Nộp hồ sơ thành công! Vui lòng chờ duyệt."), backgroundColor: Colors.green),
-          );
+      /// 🔥 UPLOAD AVATAR
+      if (_avatarFile != null) {
+        final ref = FirebaseStorage.instance
+            .ref()
+            .child("avatars/${user.uid}.jpg");
 
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const SplashScreen()),
-                (route) => false, // Xóa sạch lịch sử để reload lại Role mới
-          );
-        }
+        await ref.putFile(_avatarFile!);
+
+        avatarUrl = await ref.getDownloadURL();
       }
+
+      /// 🔥 CONVERT LỊCH
+      Map<String, bool> schedule = {
+        for (var d in weekdays)
+          d: selectedDays.contains(weekdays.indexOf(d))
+      };
+
+      /// 🔥 UPDATE FIRESTORE
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .update({
+
+        'role': 'pending_pt',
+
+        'experience': _experienceController.text.trim(),
+        'specialty': _specialtyController.text.trim(),
+        'bio': _bioController.text.trim(),
+
+        'avatar': avatarUrl,
+        'schedule': schedule,
+
+        'appliedAt': DateTime.now(),
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text("Nộp hồ sơ thành công!"),
+              backgroundColor: Colors.green),
+        );
+        Navigator.pop(context);
+      }
+
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Lỗi: $e"), backgroundColor: Colors.red),
+        SnackBar(content: Text("Lỗi: $e")),
       );
     }
 
     setState(() => _isLoading = false);
   }
 
+  /// ===================================================
+  /// 🧱 UI
+  /// ===================================================
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Đăng ký làm PT"),
@@ -68,53 +124,105 @@ class _PTRegistrationScreenState extends State<PTRegistrationScreen> {
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
-                "Điền thông tin chuyên môn",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF2E3B55)),
-              ),
-              const SizedBox(height: 10),
-              const Text("Hồ sơ của bạn sẽ được Admin xét duyệt trước khi bạn có thể bắt đầu nhận học viên.", style: TextStyle(color: Colors.grey)),
-              const SizedBox(height: 24),
 
-              // Form điền kinh nghiệm
+              /// 🖼 AVATAR
+              GestureDetector(
+                onTap: _pickAvatar,
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundImage: _avatarFile != null
+                      ? FileImage(_avatarFile!)
+                      : null,
+                  child: _avatarFile == null
+                      ? const Icon(Icons.add_a_photo,
+                      size: 30)
+                      : null,
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              /// EXPERIENCE
               TextFormField(
                 controller: _experienceController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: "Số năm kinh nghiệm", border: OutlineInputBorder()),
-                validator: (val) => val!.isEmpty ? "Vui lòng nhập số năm kinh nghiệm" : null,
+                decoration: const InputDecoration(
+                    labelText: "Số năm kinh nghiệm",
+                    border: OutlineInputBorder()),
+                validator: (v) =>
+                v!.isEmpty ? "Nhập kinh nghiệm" : null,
               ),
+
               const SizedBox(height: 16),
 
-              // Form điền chuyên môn
+              /// SPECIALTY
               TextFormField(
                 controller: _specialtyController,
-                decoration: const InputDecoration(labelText: "Chuyên môn (Ví dụ: Gym, Yoga, Boxing)", border: OutlineInputBorder()),
-                validator: (val) => val!.isEmpty ? "Vui lòng nhập chuyên môn" : null,
+                decoration: const InputDecoration(
+                    labelText: "Chuyên môn",
+                    border: OutlineInputBorder()),
+                validator: (v) =>
+                v!.isEmpty ? "Nhập chuyên môn" : null,
               ),
+
               const SizedBox(height: 16),
 
-              // Form điền giới thiệu
+              /// BIO
               TextFormField(
                 controller: _bioController,
-                maxLines: 4,
-                decoration: const InputDecoration(labelText: "Giới thiệu bản thân & Thành tích", border: OutlineInputBorder()),
-                validator: (val) => val!.isEmpty ? "Vui lòng viết vài dòng giới thiệu" : null,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                    labelText: "Giới thiệu",
+                    border: OutlineInputBorder()),
+                validator: (v) =>
+                v!.isEmpty ? "Nhập giới thiệu" : null,
               ),
-              const SizedBox(height: 32),
 
-              // Nút Submit
-              ElevatedButton(
-                onPressed: _isLoading ? null : _submitApplication,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFCA311),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+              const SizedBox(height: 20),
+
+              /// 📅 LỊCH
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text("Chọn lịch dạy",
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold)),
+              ),
+
+              const SizedBox(height: 10),
+
+              Wrap(
+                spacing: 8,
+                children: List.generate(
+                  weekdays.length,
+                      (i) {
+                    final selected =
+                    selectedDays.contains(i);
+
+                    return ChoiceChip(
+                      label: Text(weekdays[i]),
+                      selected: selected,
+                      onSelected: (_) {
+                        setState(() {
+                          selected
+                              ? selectedDays.remove(i)
+                              : selectedDays.add(i);
+                        });
+                      },
+                    );
+                  },
                 ),
+              ),
+
+              const SizedBox(height: 30),
+
+              /// SUBMIT
+              ElevatedButton(
+                onPressed:
+                _isLoading ? null : _submitApplication,
                 child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text("GỬI HỒ SƠ XÉT DUYỆT", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              )
+                    ? const CircularProgressIndicator()
+                    : const Text("GỬI HỒ SƠ"),
+              ),
             ],
           ),
         ),
