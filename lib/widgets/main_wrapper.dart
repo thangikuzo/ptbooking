@@ -45,16 +45,15 @@ class _MainWrapperState extends State<MainWrapper> {
     // 2. KIỂM TRA QUYỀN PT
     else if (widget.userRole == 'PT') {
       _screens = [
-        
-        const ChallengeScreen(), // ---- MỚI NHÉT THÊM VÀO CHO PT ĐÂY ----
-        const PTTeachingScheduleScreen(),
-        const PTBookingManagementScreen(),
-        AccountScreen(userRole: widget.userRole),
+        const PTTeachingScheduleScreen(),    // 0. Khớp với nút Lịch dạy
+        const PTBookingManagementScreen(),   // 1. Khớp với nút Học viên
+        const ChallengeScreen(),             // 2. Khớp với nút Thử thách
+        AccountScreen(userRole: widget.userRole), // 3. Khớp với nút Tài khoản
       ];
       _navItems = const [
         BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: 'Lịch dạy'),
         BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Học viên'),
-        BottomNavigationBarItem(icon: Icon(Icons.emoji_events), label: 'Thử thách'), // ---- THÊM ICON CHO PT ĐÂY ----
+        BottomNavigationBarItem(icon: Icon(Icons.emoji_events), label: 'Thử thách'),
         BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Tài khoản'),
       ];
     }
