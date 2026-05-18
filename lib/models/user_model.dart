@@ -43,18 +43,23 @@ class UserModel {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     return UserModel(
       uid: doc.id,
-      email: data['email'] ?? '',
-      name: data['name'] ?? 'Ẩn danh',
-      avatar: data['avatar'],
-      role: data['role'] ?? 'User',
-      phone: data['phone'],
-      gender: data['gender'],
-      age: data['age'],
-      height: data['height']?.toDouble(),
-      weight: data['weight']?.toDouble(),
-      specialty: data['specialty'].toString(),
-      experience: data['experience'].toString(),
-      bio: data['bio'],
+      email: data['email']?.toString() ?? '',
+      name: data['name']?.toString() ?? 'Ẩn danh',
+      avatar: data['avatar']?.toString(),
+      role: data['role']?.toString() ?? 'User',
+
+      // Thêm ?.toString() vào để chống lỗi hiện chữ "null"
+      phone: data['phone']?.toString(),
+      gender: data['gender']?.toString(),
+      address: data['address']?.toString(), // Đã bổ sung address bị thiếu
+      specialty: data['specialty']?.toString(),
+      experience: data['experience']?.toString(),
+      bio: data['bio']?.toString(),
+
+      // Xử lý bọc thép cho các trường Số (int, double)
+      age: data['age'] is int ? data['age'] : int.tryParse(data['age']?.toString() ?? ''),
+      height: data['height'] is num ? data['height'].toDouble() : double.tryParse(data['height']?.toString() ?? ''),
+      weight: data['weight'] is num ? data['weight'].toDouble() : double.tryParse(data['weight']?.toString() ?? ''),
     );
   }
 

@@ -19,6 +19,27 @@ class _PTBookingManagementScreenState
   final BookingService _bookingService = BookingService();
   final User? _currentUser = FirebaseAuth.instance.currentUser;
 
+  String _translateDay(String englishDay) {
+    switch (englishDay.toLowerCase()) {
+      case 'monday':
+        return 'Thứ 2';
+      case 'tuesday':
+        return 'Thứ 3';
+      case 'wednesday':
+        return 'Thứ 4';
+      case 'thursday':
+        return 'Thứ 5';
+      case 'friday':
+        return 'Thứ 6';
+      case 'saturday':
+        return 'Thứ 7';
+      case 'sunday':
+        return 'Chủ nhật';
+      default:
+        return englishDay;
+    }
+  }
+
   Future<String> _createOrGetChatRoom({
     required BookingModel booking,
   }) async {
@@ -33,8 +54,7 @@ class _PTBookingManagementScreenState
       return chatQuery.docs.first.id;
     }
 
-    final chatDoc =
-    await FirebaseFirestore.instance.collection('chats').add({
+    final chatDoc = await FirebaseFirestore.instance.collection('chats').add({
       'customer_id': booking.userId,
       'customer_name': booking.userName,
       'pt_id': booking.ptId,
@@ -48,23 +68,26 @@ class _PTBookingManagementScreenState
     return chatDoc.id;
   }
 
+  Future<String> _getStudentName(String studentId, String fallbackName) async {
+    if (studentId.isEmpty) return fallbackName;
+
+    final userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(studentId)
+        .get();
+
+    if (userDoc.exists && userDoc.data() != null) {
+      final data = userDoc.data()!;
+      return data['name']?.toString() ?? fallbackName;
+    }
+
+    return fallbackName;
+  }
+
   Future<void> _handleUpdateStatus(
       BookingModel booking,
       String newStatus,
       ) async {
-  String _translateDay(String englishDay) {
-    switch (englishDay.toLowerCase()) {
-      case 'monday': return 'Thứ 2';
-      case 'tuesday': return 'Thứ 3';
-      case 'wednesday': return 'Thứ 4';
-      case 'thursday': return 'Thứ 5';
-      case 'friday': return 'Thứ 6';
-      case 'saturday': return 'Thứ 7';
-      case 'sunday': return 'Chủ nhật';
-      default: return englishDay;
-    }
-  }
-  Future<void> _handleUpdateStatus(String bookingId, String newStatus) async {
     try {
       await _bookingService.updateBookingStatus(
         booking.id,
@@ -79,9 +102,7 @@ class _PTBookingManagementScreenState
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text(
-                "Đã chấp nhận lịch tập!",
-              ),
+              content: Text("Đã chấp nhận lịch tập!"),
               backgroundColor: Colors.green,
             ),
           );
@@ -99,9 +120,7 @@ class _PTBookingManagementScreenState
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text(
-                "Đã từ chối yêu cầu.",
-              ),
+              content: Text("Đã từ chối yêu cầu."),
               backgroundColor: Colors.red,
             ),
           );
@@ -144,14 +163,13 @@ class _PTBookingManagementScreenState
             .where('status', isEqualTo: 'pending')
             .snapshots(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState ==
-              ConnectionState.waiting) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
               child: CircularProgressIndicator(),
             );
           }
 
-          var docs = snapshot.data?.docs ?? [];
+          final docs = snapshot.data?.docs ?? [];
 
           if (docs.isEmpty) {
             return const Center(
@@ -163,70 +181,45 @@ class _PTBookingManagementScreenState
             padding: const EdgeInsets.all(12),
             itemCount: docs.length,
             itemBuilder: (context, index) {
-              BookingModel booking =
-              BookingModel.fromFirestore(
-                docs[index],
-              );
-              BookingModel booking = BookingModel.fromFirestore(docs[index]);
-
-              // Lấy ID của học viên trực tiếp từ document để dò tìm (đề phòng Model chưa có)
-              String studentId = docs[index]['user_id'] ?? '';
+              final booking = BookingModel.fromFirestore(docs[index]);
+              final studentId = booking.userId;
 
               return Card(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15),
                 ),
-                margin:
-                const EdgeInsets.only(bottom: 12),
+                margin: const EdgeInsets.only(bottom: 12),
                 child: ListTile(
-                  contentPadding:
-                  const EdgeInsets.all(16),
-                  title: Text(
-                    booking.userName,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
                   contentPadding: const EdgeInsets.all(16),
 
-                  // --- TUYỆT CHIÊU KÉO TÊN THẬT TỪ FIREBASE ---
-                  title: FutureBuilder<DocumentSnapshot>(
-                    future: FirebaseFirestore.instance.collection('users').doc(studentId).get(),
+                  title: FutureBuilder<String>(
+                    future: _getStudentName(studentId, booking.userName),
                     builder: (context, userSnapshot) {
-                      // Đang load data
-                      if (userSnapshot.connectionState == ConnectionState.waiting) {
-                        return const Text("Đang tải tên...", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey));
-                      }
+                      final name = userSnapshot.data ?? booking.userName;
 
-                      // Nếu tìm thấy học viên
-                      if (userSnapshot.hasData && userSnapshot.data!.exists) {
-                        Map<String, dynamic> userData = userSnapshot.data!.data() as Map<String, dynamic>;
-                        String realName = userData['name']?.toString() ?? "Học viên ẩn danh";
-                        return Text(realName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18));
-                      }
-
-                      // Lỡ học viên xóa acc hoặc lỗi
-                      return Text(booking.userName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18));
+                      return Text(
+                        name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      );
                     },
                   ),
-                  // ---------------------------------------------
 
                   subtitle: Column(
-                    crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 4),
                       Text(
-                        "Ngày: ${booking.bookingDate} (${booking.day})",
+                        "Ngày: ${booking.bookingDate} (${_translateDay(booking.day)})",
                       ),
                       Text(
                         "Giờ tập: ${booking.timeSlot}",
                       ),
-                      Text("Ngày: ${booking.bookingDate} (${_translateDay(booking.day)})"),
-                      Text("Giờ tập: ${booking.timeSlot}"),
                     ],
                   ),
+
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -235,22 +228,20 @@ class _PTBookingManagementScreenState
                           Icons.cancel,
                           color: Colors.red,
                         ),
-                        onPressed: () =>
-                            _handleUpdateStatus(
-                              booking,
-                              'canceled',
-                            ),
+                        onPressed: () => _handleUpdateStatus(
+                          booking,
+                          'canceled',
+                        ),
                       ),
                       IconButton(
                         icon: const Icon(
                           Icons.check_circle,
                           color: Colors.green,
                         ),
-                        onPressed: () =>
-                            _handleUpdateStatus(
-                              booking,
-                              'confirmed',
-                            ),
+                        onPressed: () => _handleUpdateStatus(
+                          booking,
+                          'confirmed',
+                        ),
                       ),
                     ],
                   ),
