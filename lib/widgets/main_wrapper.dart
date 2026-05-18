@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../screens/pt_booking_management_screen.dart';
 import 'package:ptbooking/screens/pt_teaching_schedule_screen.dart';
-import '../screens/admin_dashboard.dart';
+import '../screens/admin/admin_dashboard.dart';
 import '../screens/home_screen.dart';
 import '../screens/challenge_screen.dart';
 import '../screens/history_screen.dart';
