@@ -64,6 +64,7 @@ class UserModel {
       'uid': uid,
       'email': email,
       'name': name,
+
       'avatar': avatar,
       'role': role,
       'phone': phone,
