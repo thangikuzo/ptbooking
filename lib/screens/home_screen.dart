@@ -1,394 +1,145 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:shimmer/shimmer.dart';
-import 'package:animate_do/animate_do.dart';
-import '../models/pt_model.dart';
-import 'payment_screen.dart';
+import '../models/user_model.dart'; // <-- DÙNG USER MODEL
+import 'pt_detail_screen.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  List<PT> ptList = [];
-  bool isLoading = false;
-
-  Future<void> fetchPTByDays(List<String> days) async {
-    if (days.isEmpty) {
-      setState(() {
-        ptList = [];
-        isLoading = false;
-      });
-      return;
-    }
-
-    setState(() => isLoading = true);
-
-    final snapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .where('role', isEqualTo: 'PT')
-        .get();
-
-    List<PT> result = [];
-
-    for (var doc in snapshot.docs) {
-      final pt = PT.fromDoc(doc);
-      bool match = days.any((d) => pt.schedule[d] == true);
-      if (match) result.add(pt);
-    }
-
-    setState(() {
-      ptList = result;
-      isLoading = false;
-    });
-  }
-
-  void _showBookingDialog(PT pt) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20)),
-        title: Text("Thuê PT ${pt.name}"),
-        content: Text(
-            "Giá ${pt.price ~/ 1000}k/buổi\nBạn sẽ được chuyển đến trang thanh toán."),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Hủy")),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => PaymentScreen(
-                    pt: pt,
-                    onPaymentSuccess: () => _createPendingBooking(pt),
-                  ),
-                ),
-              );
-            },
-            child: const Text("Thanh toán"),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _createPendingBooking(PT pt) async {
-    await FirebaseFirestore.instance.collection('bookings').add({
-      'ptId': pt.id,
-      'price': pt.price,
-      'status': 'pending_approval',
-      'createdAt': FieldValue.serverTimestamp(),
-      'paymentStatus': 'completed',
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Đã gửi yêu cầu thuê PT")),
-    );
-  }
-
-  @override
   Widget build(BuildContext context) {
-    const primary = Color(0xFFFF6B6B);
-    const accent = Color(0xFFFFD93D);
-    const bg = Color(0xFFF7F8FA);
+    final Color primaryColor = const Color(0xFF2E3B55);
+    final Color accentColor = const Color(0xFFFCA311);
 
     return Scaffold(
-      backgroundColor: bg,
-
-      /// 🔥 APPBAR CAO CẤP
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
+        backgroundColor: primaryColor,
         elevation: 0,
-        centerTitle: true,
-        title: const Text(
-          "Tìm PT Phù Hợp",
-          style: TextStyle(fontWeight: FontWeight.w800),
-        ),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFFFF5252), Color(0xFFFF6B6B)],
-            ),
-          ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Text("Xin chào, Học viên!", style: TextStyle(fontSize: 14, color: Colors.white70)),
+            Text("Tìm PT phù hợp ngay", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ],
         ),
       ),
-
-      body: Column(
-        children: [
-
-          /// 📅 CHỌN NGÀY
-          FadeInDown(
-            child: MultiWeekdaySelector(
-              onChanged: fetchPTByDays,
-              primaryColor: primary,
-            ),
-          ),
-
-          /// 📋 DANH SÁCH PT
-          Expanded(
-            child: isLoading
-                ? _buildShimmer()
-                : ptList.isEmpty
-                ? _emptyState()
-                : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: ptList.length,
-              itemBuilder: (_, i) => FadeInUp(
-                delay: Duration(milliseconds: 100 * i),
-                child: _ptCard(ptList[i], primary, accent),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 1. Search Bar (Giữ nguyên UI của ông)
+            TextField(
+              decoration: InputDecoration(
+                hintText: "Tìm kiếm PT...",
+                prefixIcon: const Icon(Icons.search),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
+            const SizedBox(height: 20),
 
-  /// =========================================================
-  /// ⭐ CARD PT PREMIUM
-  /// =========================================================
+            // 2. Banner (Giữ nguyên)
+            _buildBanner(accentColor),
+            const SizedBox(height: 20),
 
-  Widget _ptCard(PT pt, Color primary, Color accent) {
-    return GestureDetector(
-      onTap: () => _showBookingDialog(pt),
-      child: Container(
-        height: 210,
-        margin: const EdgeInsets.only(bottom: 18),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: primary.withOpacity(0.25),
-              blurRadius: 25,
-              offset: const Offset(0, 12),
+            Text("PT Nổi bật", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryColor)),
+            const SizedBox(height: 12),
+
+            // 3. DANH SÁCH PT - ĐÃ NÂNG CẤP MODEL
+            SizedBox(
+              height: 200,
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance.collection('users').where('role', isEqualTo: 'PT').snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) return const CircularProgressIndicator();
+
+                  var docs = snapshot.data?.docs ?? [];
+                  if (docs.isEmpty) return const Text("Chưa có PT nào.");
+
+                  return ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: docs.length,
+                    itemBuilder: (context, index) {
+                      // Ép kiểu doc sang UserModel
+                      UserModel pt = UserModel.fromFirestore(docs[index]);
+
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PTDetailScreen(
+                                ptUid: pt.uid,
+                                ptData: pt.toMap(), // Vẫn truyền map cho PTDetail nhận (đến khi fix file đó)
+                              ),
+                            ),
+                          );
+                        },
+                        child: _buildPTCard(pt, primaryColor),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: Stack(
-            children: [
-
-              /// 🖼️ ẢNH NỀN
-              Positioned.fill(
-                child: pt.avatar.isNotEmpty
-                    ? Image.network(pt.avatar, fit: BoxFit.cover)
-                    : Container(color: Colors.grey),
-              ),
-
-              /// 🌑 GRADIENT
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.bottomCenter,
-                      end: Alignment.topCenter,
-                      colors: [
-                        Colors.black.withOpacity(0.9),
-                        Colors.black45,
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
-              /// ⭐ RATING
-              Positioned(
-                top: 12,
-                right: 12,
-                child: Container(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.star, color: accent, size: 16),
-                      const SizedBox(width: 4),
-                      Text(
-                        pt.rating?.toStringAsFixed(1) ?? "4.8",
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              /// 📋 THÔNG TIN
-              Positioned.fill(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-
-                      Text(
-                        pt.name,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-
-                      Text(
-                        pt.specialty,
-                        style: TextStyle(color: Colors.grey[300]),
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      Row(
-                        children: [
-                          Icon(Icons.work,
-                              color: Colors.white70, size: 16),
-                          const SizedBox(width: 4),
-                          Text(
-                            "${pt.experience ?? 0} năm KN",
-                            style:
-                            const TextStyle(color: Colors.white70),
-                          ),
-
-                          const Spacer(),
-
-                          Text(
-                            "${pt.price ~/ 1000}k",
-                            style: TextStyle(
-                              fontSize: 22,
-                              color: accent,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-
-                          const SizedBox(width: 10),
-
-                          ElevatedButton(
-                            onPressed: () => _showBookingDialog(pt),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: primary,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                            ),
-                            child: const Text("Thuê ngay"),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
 
-  /// =========================================================
-  /// ✨ SHIMMER
-  /// =========================================================
-
-  Widget _buildShimmer() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: 4,
-      itemBuilder: (_, __) => Shimmer.fromColors(
-        baseColor: Colors.grey[300]!,
-        highlightColor: Colors.grey[100]!,
-        child: Container(
-          height: 210,
-          margin: const EdgeInsets.only(bottom: 18),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-          ),
-        ),
+  // Widget con để code Home nhìn sạch hơn
+  Widget _buildPTCard(UserModel pt, Color primaryColor) {
+    return Container(
+      width: 150,
+      margin: const EdgeInsets.only(right: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 5)],
       ),
-    );
-  }
-
-  /// =========================================================
-  /// 📭 EMPTY STATE
-  /// =========================================================
-
-  Widget _emptyState() {
-    return const Center(
-      child: Text(
-        "Chọn ngày để tìm PT phù hợp",
-        style: TextStyle(fontSize: 18),
-      ),
-    );
-  }
-}
-
-/// =========================================================
-/// 📅 SELECTOR NGÀY
-/// =========================================================
-
-class MultiWeekdaySelector extends StatefulWidget {
-  final Function(List<String>) onChanged;
-  final Color primaryColor;
-
-  const MultiWeekdaySelector({
-    super.key,
-    required this.onChanged,
-    required this.primaryColor,
-  });
-
-  @override
-  State<MultiWeekdaySelector> createState() =>
-      _MultiWeekdaySelectorState();
-}
-
-class _MultiWeekdaySelectorState
-    extends State<MultiWeekdaySelector> {
-  final weekdays = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
-  final Set<int> selected = {};
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 70,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.all(12),
-        itemCount: weekdays.length,
-        itemBuilder: (_, i) {
-          final isSel = selected.contains(i);
-
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: ChoiceChip(
-              label: Text(weekdays[i]),
-              selected: isSel,
-              selectedColor: widget.primaryColor,
-              labelStyle: TextStyle(
-                color: isSel ? Colors.white : Colors.black,
-                fontWeight: FontWeight.bold,
-              ),
-              onSelected: (v) {
-                setState(() {
-                  v ? selected.add(i) : selected.remove(i);
-                });
-
-                widget.onChanged(
-                    selected.map((e) => weekdays[e]).toList());
-              },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(color: Colors.grey[200], borderRadius: const BorderRadius.vertical(top: Radius.circular(12))),
+              child: (pt.avatar != null && pt.avatar!.isNotEmpty)
+                  ? ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                child: Image.network(
+                  pt.avatar!,
+                  fit: BoxFit.cover, // Ảnh sẽ phủ kín khung xám
+                  width: double.infinity,
+                  errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image),
+                ),
+              )
+                  : const Center(child: Icon(Icons.person, size: 50, color: Colors.grey)),
             ),
-          );
-        },
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(pt.name, style: TextStyle(fontWeight: FontWeight.bold, color: primaryColor), maxLines: 1),
+                Text(pt.specialty ?? "Chuyên môn", style: const TextStyle(fontSize: 12, color: Colors.orange)),
+              ],
+            ),
+          )
+        ],
       ),
+    );
+  }
+
+  Widget _buildBanner(Color accentColor) {
+    return Container(
+      height: 120,
+      decoration: BoxDecoration(color: accentColor, borderRadius: BorderRadius.circular(16)),
+      child: const Center(child: Text("BANNER", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
     );
   }
 }

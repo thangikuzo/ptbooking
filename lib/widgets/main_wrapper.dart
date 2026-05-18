@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:ptbooking/screens/pt_booking_management_screen.dart';
+import 'package:ptbooking/screens/pt_teaching_schedule_screen.dart';
 import '../screens/admin_dashboard.dart';
 import '../screens/home_screen.dart';
 import '../screens/challenge_screen.dart';
@@ -43,9 +45,10 @@ class _MainWrapperState extends State<MainWrapper> {
     // 2. KIỂM TRA QUYỀN PT
     else if (widget.userRole == 'PT') {
       _screens = [
-        const Center(child: Text("Màn hình: Lịch dạy hôm nay (Dành cho PT)")),
-        const Center(child: Text("Màn hình: Danh sách Học viên (Dành cho PT)")),
+        
         const ChallengeScreen(), // ---- MỚI NHÉT THÊM VÀO CHO PT ĐÂY ----
+        const PTTeachingScheduleScreen(),
+        const PTBookingManagementScreen(),
         AccountScreen(userRole: widget.userRole),
       ];
       _navItems = const [
