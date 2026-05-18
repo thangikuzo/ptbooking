@@ -52,8 +52,8 @@ class UserModel {
       age: data['age'],
       height: data['height']?.toDouble(),
       weight: data['weight']?.toDouble(),
-      specialty: data['specialty'],
-      experience: data['experience'],
+      specialty: data['specialty'].toString(),
+      experience: data['experience'].toString(),
       bio: data['bio'],
     );
   }
