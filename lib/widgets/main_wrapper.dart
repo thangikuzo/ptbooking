@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:ptbooking/screens/pt_booking_management_screen.dart';
+import '../screens/pt_booking_management_screen.dart';
 import 'package:ptbooking/screens/pt_teaching_schedule_screen.dart';
 import '../screens/admin_dashboard.dart';
 import '../screens/home_screen.dart';
 import '../screens/category_screen.dart';
 import '../screens/history_screen.dart';
 import '../screens/account_screen.dart';
-
+import '../screens/chat_list_screen.dart';
 class MainWrapper extends StatefulWidget {
   // Biến nhận Role từ màn hình Login hoặc Splash truyền sang
   final String userRole;
@@ -60,13 +60,13 @@ class _MainWrapperState extends State<MainWrapper> {
     else {
       _screens = [
         const HomeScreen(),
-        const CategoryScreen(),
+        const ChatListScreen(),
         const HistoryScreen(),
         AccountScreen(userRole: widget.userRole),
       ];
       _navItems = const [
         BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'Trang chủ'),
-        BottomNavigationBarItem(icon: Icon(Icons.category_outlined), activeIcon: Icon(Icons.category), label: 'Danh mục'),
+        BottomNavigationBarItem(icon: Icon(Icons.category_outlined), activeIcon: Icon(Icons.category), label: 'Tin nhắn'),
         BottomNavigationBarItem(icon: Icon(Icons.history_outlined), activeIcon: Icon(Icons.history), label: 'Lịch sử'),
         BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'Tài khoản'),
       ];

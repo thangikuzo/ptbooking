@@ -111,6 +111,9 @@ class _PTRegistrationScreenState extends State<PTRegistrationScreen> {
                   backgroundColor: const Color(0xFFFCA311),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
+
+
+
                 child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
                     : const Text("GỬI HỒ SƠ XÉT DUYỆT", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
