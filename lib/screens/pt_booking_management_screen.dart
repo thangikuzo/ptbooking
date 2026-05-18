@@ -14,8 +14,18 @@ class PTBookingManagementScreen extends StatefulWidget {
 class _PTBookingManagementScreenState extends State<PTBookingManagementScreen> {
   final BookingService _bookingService = BookingService();
   final User? _currentUser = FirebaseAuth.instance.currentUser;
-
-  // Hàm xử lý duyệt hoặc từ chối thông qua Service
+  String _translateDay(String englishDay) {
+    switch (englishDay.toLowerCase()) {
+      case 'monday': return 'Thứ 2';
+      case 'tuesday': return 'Thứ 3';
+      case 'wednesday': return 'Thứ 4';
+      case 'thursday': return 'Thứ 5';
+      case 'friday': return 'Thứ 6';
+      case 'saturday': return 'Thứ 7';
+      case 'sunday': return 'Chủ nhật';
+      default: return englishDay;
+    }
+  }
   Future<void> _handleUpdateStatus(String bookingId, String newStatus) async {
     try {
       await _bookingService.updateBookingStatus(bookingId, newStatus);
@@ -43,7 +53,6 @@ class _PTBookingManagementScreenState extends State<PTBookingManagementScreen> {
         backgroundColor: const Color(0xFF2E3B55),
       ),
       body: StreamBuilder<QuerySnapshot>(
-        // Lọc các đơn 'pending' dành cho PT này
         stream: FirebaseFirestore.instance
             .collection('bookings')
             .where('pt_id', isEqualTo: _currentUser!.uid)
@@ -61,20 +70,44 @@ class _PTBookingManagementScreenState extends State<PTBookingManagementScreen> {
             padding: const EdgeInsets.all(12),
             itemCount: docs.length,
             itemBuilder: (context, index) {
-              // Ép kiểu sang BookingModel
               BookingModel booking = BookingModel.fromFirestore(docs[index]);
+
+              // Lấy ID của học viên trực tiếp từ document để dò tìm (đề phòng Model chưa có)
+              String studentId = docs[index]['user_id'] ?? '';
 
               return Card(
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                 margin: const EdgeInsets.only(bottom: 12),
                 child: ListTile(
                   contentPadding: const EdgeInsets.all(16),
-                  title: Text(booking.userName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+
+                  // --- TUYỆT CHIÊU KÉO TÊN THẬT TỪ FIREBASE ---
+                  title: FutureBuilder<DocumentSnapshot>(
+                    future: FirebaseFirestore.instance.collection('users').doc(studentId).get(),
+                    builder: (context, userSnapshot) {
+                      // Đang load data
+                      if (userSnapshot.connectionState == ConnectionState.waiting) {
+                        return const Text("Đang tải tên...", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey));
+                      }
+
+                      // Nếu tìm thấy học viên
+                      if (userSnapshot.hasData && userSnapshot.data!.exists) {
+                        Map<String, dynamic> userData = userSnapshot.data!.data() as Map<String, dynamic>;
+                        String realName = userData['name']?.toString() ?? "Học viên ẩn danh";
+                        return Text(realName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18));
+                      }
+
+                      // Lỡ học viên xóa acc hoặc lỗi
+                      return Text(booking.userName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18));
+                    },
+                  ),
+                  // ---------------------------------------------
+
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 4),
-                      Text("Ngày: ${booking.bookingDate} (${booking.day})"),
+                      Text("Ngày: ${booking.bookingDate} (${_translateDay(booking.day)})"),
                       Text("Giờ tập: ${booking.timeSlot}"),
                     ],
                   ),
