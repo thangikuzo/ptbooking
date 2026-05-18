@@ -52,6 +52,19 @@ class _PTBookingManagementScreenState
       BookingModel booking,
       String newStatus,
       ) async {
+  String _translateDay(String englishDay) {
+    switch (englishDay.toLowerCase()) {
+      case 'monday': return 'Thứ 2';
+      case 'tuesday': return 'Thứ 3';
+      case 'wednesday': return 'Thứ 4';
+      case 'thursday': return 'Thứ 5';
+      case 'friday': return 'Thứ 6';
+      case 'saturday': return 'Thứ 7';
+      case 'sunday': return 'Chủ nhật';
+      default: return englishDay;
+    }
+  }
+  Future<void> _handleUpdateStatus(String bookingId, String newStatus) async {
     try {
       await _bookingService.updateBookingStatus(
         booking.id,
@@ -154,6 +167,10 @@ class _PTBookingManagementScreenState
               BookingModel.fromFirestore(
                 docs[index],
               );
+              BookingModel booking = BookingModel.fromFirestore(docs[index]);
+
+              // Lấy ID của học viên trực tiếp từ document để dò tìm (đề phòng Model chưa có)
+              String studentId = docs[index]['user_id'] ?? '';
 
               return Card(
                 shape: RoundedRectangleBorder(
@@ -171,6 +188,30 @@ class _PTBookingManagementScreenState
                       fontSize: 18,
                     ),
                   ),
+                  contentPadding: const EdgeInsets.all(16),
+
+                  // --- TUYỆT CHIÊU KÉO TÊN THẬT TỪ FIREBASE ---
+                  title: FutureBuilder<DocumentSnapshot>(
+                    future: FirebaseFirestore.instance.collection('users').doc(studentId).get(),
+                    builder: (context, userSnapshot) {
+                      // Đang load data
+                      if (userSnapshot.connectionState == ConnectionState.waiting) {
+                        return const Text("Đang tải tên...", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey));
+                      }
+
+                      // Nếu tìm thấy học viên
+                      if (userSnapshot.hasData && userSnapshot.data!.exists) {
+                        Map<String, dynamic> userData = userSnapshot.data!.data() as Map<String, dynamic>;
+                        String realName = userData['name']?.toString() ?? "Học viên ẩn danh";
+                        return Text(realName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18));
+                      }
+
+                      // Lỡ học viên xóa acc hoặc lỗi
+                      return Text(booking.userName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18));
+                    },
+                  ),
+                  // ---------------------------------------------
+
                   subtitle: Column(
                     crossAxisAlignment:
                     CrossAxisAlignment.start,
@@ -182,6 +223,8 @@ class _PTBookingManagementScreenState
                       Text(
                         "Giờ tập: ${booking.timeSlot}",
                       ),
+                      Text("Ngày: ${booking.bookingDate} (${_translateDay(booking.day)})"),
+                      Text("Giờ tập: ${booking.timeSlot}"),
                     ],
                   ),
                   trailing: Row(
