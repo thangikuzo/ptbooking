@@ -206,6 +206,28 @@ class _AccountScreenState extends State<AccountScreen> {
           fontWeight: FontWeight.bold,
           color: color,
         ),
+  Widget _buildMenuOptions(BuildContext context) {
+    return Expanded(
+      child: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        children: [
+          _buildMenuItem(Icons.person_outline, "Chỉnh sửa hồ sơ", () {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const EditProfileScreen()));
+          }),
+          if (_userModel?.role == 'user')
+            _buildMenuItem(Icons.sports, "Đăng ký trở thành PT", () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const PTRegistrationScreen()));
+            }),
+          if (_userModel?.role == 'PT')
+            _buildMenuItem(Icons.schedule, "Cài đặt giờ làm việc", () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const PTScheduleScreen()));
+            }),
+          const Divider(height: 30),
+          _buildMenuItem(Icons.logout, "Đăng xuất", () async {
+            await _authService.logout();
+            if (mounted) Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context) => const LoginScreen()), (route) => false);
+          }, isDestructive: true),
+        ],
       ),
     );
   }
