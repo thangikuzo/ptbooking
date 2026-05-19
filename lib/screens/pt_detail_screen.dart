@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+// Import Model và Service chuẩn Clean Architecture
+import '../models/booking_model.dart';
+import '../services/booking_service.dart';
+
 class PTDetailScreen extends StatefulWidget {
   final String ptUid;
   final Map<String, dynamic> ptData;
@@ -16,11 +20,11 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
   Map<String, List<dynamic>> _ptSchedule = {};
   bool _isLoadingSchedule = true;
   bool _isBooking = false;
-  bool _isCheckingSlots = false; // Hiệu ứng xoay khi đang check trùng lịch
+  bool _isCheckingSlots = false;
 
-  DateTime? _selectedDate; // Ngày cụ thể user chọn
-  List<String> _bookedSlots = []; // Danh sách các giờ đã bị người khác đặt
-  String? _selectedDay; // Tên thứ tiếng Anh (monday, tuesday...)
+  DateTime? _selectedDate;
+  List<String> _bookedSlots = [];
+  String? _selectedDay;
   String? _selectedTime;
 
   final Map<String, String> _dayLabels = {
@@ -55,7 +59,7 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
         setState(() => _isLoadingSchedule = false);
       }
     } catch (e) {
-      print("Lỗi tải lịch PT: $e");
+      debugPrint("Lỗi tải lịch PT: $e");
       setState(() => _isLoadingSchedule = false);
     }
   }
@@ -66,61 +70,48 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 30)), // Cho phép đặt trước 30 ngày
+      lastDate: DateTime.now().add(const Duration(days: 30)),
       helpText: 'CHỌN NGÀY TẬP',
     );
 
     if (picked != null) {
-      // Xác định ngày user chọn là Thứ mấy
       List<String> weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
       String dayName = weekdays[picked.weekday - 1];
 
       setState(() {
         _selectedDate = picked;
         _selectedDay = dayName;
-        _selectedTime = null; // Reset giờ khi đổi ngày
+        _selectedTime = null;
       });
 
-      // Kiểm tra xem PT có rảnh thứ đó không
       if (!_ptSchedule.containsKey(dayName)) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("PT không có lịch rảnh vào ${_dayLabels[dayName]}! Vui lòng chọn ngày khác."), backgroundColor: Colors.orange),
         );
-        setState(() => _bookedSlots = []); // Xóa danh sách giờ bị trùng cũ
+        setState(() => _bookedSlots = []);
       } else {
-        // Nếu rảnh, gọi hàm check xem đã có ai đặt giờ nào chưa
         _checkBookedSlots(picked);
       }
     }
   }
 
-  // 3. Hàm truy vấn Firebase để tìm các giờ đã "Confirmed" trong ngày đó
+  // 3. SỬ DỤNG BOOKING SERVICE: Kiểm tra giờ đã bị đặt
   Future<void> _checkBookedSlots(DateTime date) async {
     setState(() => _isCheckingSlots = true);
-
-    // Format ngày thành chuỗi yyyy-MM-dd để query
-    String dateStr = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
-
     try {
-      var snapshot = await FirebaseFirestore.instance
-          .collection('bookings')
-          .where('pt_id', isEqualTo: widget.ptUid)
-          .where('booking_date', isEqualTo: dateStr) // Tìm đúng ngày đó
-          .where('status', isEqualTo: 'confirmed')   // Chỉ lọc những đơn đã được PT chốt
-          .get();
-
+      // Gọi service thay vì chọc thẳng vào Firebase
+      List<String> booked = await BookingService().getBookedSlots(widget.ptUid, date);
       setState(() {
-        // Lấy ra danh sách các time_slot đã bị đặt
-        _bookedSlots = snapshot.docs.map((doc) => doc['time_slot'].toString()).toList();
+        _bookedSlots = booked;
         _isCheckingSlots = false;
       });
     } catch (e) {
-      print("Lỗi check trùng lịch: $e");
+      debugPrint("Lỗi check trùng lịch: $e");
       setState(() => _isCheckingSlots = false);
     }
   }
 
-  // 4. Hàm đẩy data lên bảng 'bookings'
+  // 4. SỬ DỤNG BOOKING MODEL VÀ SERVICE: Đẩy lịch lên Firebase
   Future<void> _bookPT() async {
     if (_selectedDate == null || _selectedDay == null || _selectedTime == null) return;
 
@@ -133,20 +124,31 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
     setState(() => _isBooking = true);
 
     try {
+      // Lấy tên thật của Học viên từ bảng Users
+      String realUserName = "Học viên";
+      var userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      if (userDoc.exists && userDoc.data() != null) {
+        realUserName = userDoc.data()!['name'] ?? "Học viên";
+      }
+
       String dateStr = "${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}";
 
-      await FirebaseFirestore.instance.collection('bookings').add({
-        'user_id': user.uid,
-        'user_name': user.displayName ?? "Người dùng ",
-        'pt_id': widget.ptUid,
-        'pt_name': widget.ptData['name'] ?? "PT",
-        'booking_date': dateStr,     // <-- LƯU THÊM NGÀY CỤ THỂ
-        'day': _selectedDay,
-        'time_slot': _selectedTime,
-        'status': 'pending',
-        'payment_status': 'unpaid',
-        'created_at': FieldValue.serverTimestamp(),
-      });
+      // ĐÓNG GÓI DATA VÀO MODEL
+      BookingModel newBooking = BookingModel(
+        id: '', // Firebase tự sinh ID nên để trống
+        userId: user.uid,
+        userName: realUserName,
+        ptId: widget.ptUid,
+        ptName: widget.ptData['name'] ?? "PT",
+        bookingDate: dateStr,
+        day: _selectedDay!,
+        timeSlot: _selectedTime!,
+        status: 'pending',
+        paymentStatus: 'unpaid', // Đã khớp với Model
+      );
+
+      // GỌI SERVICE ĐẨY LÊN FIREBASE
+      await BookingService().createBooking(newBooking);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -182,17 +184,16 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
             Row(
               children: [
                 CircleAvatar(
-                  radius: 40, // Kích thước ảnh, ông có thể chỉnh to nhỏ tùy ý
+                  radius: 40,
                   backgroundColor: Colors.grey[200],
-                  // Kiểm tra nếu map ptData có chứa link ảnh thì lấy link đó load lên
                   backgroundImage: (widget.ptData['avatar'] != null && widget.ptData['avatar'].toString().isNotEmpty)
                       ? NetworkImage(widget.ptData['avatar'])
                       : null,
-                  // Nếu không có link ảnh thì vẫn hiện cái icon người mặc định
                   child: (widget.ptData['avatar'] == null || widget.ptData['avatar'].toString().isEmpty)
                       ? const Icon(Icons.person, size: 40, color: Colors.grey)
                       : null,
-                ),                const SizedBox(width: 16),
+                ),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -225,7 +226,7 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 1. CHỌN NGÀY TỪ BẢNG LỊCH
+                  // 1. CHỌN NGÀY
                   const Text("1. Chọn ngày cụ thể", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
                   const SizedBox(height: 8),
                   SizedBox(
@@ -247,7 +248,7 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // 2. CHỌN GIỜ (Chỉ hiện khi đã chọn Ngày và check xong)
+                  // 2. CHỌN GIỜ
                   if (_selectedDay != null && _ptSchedule.containsKey(_selectedDay)) ...[
                     const Text("2. Chọn giờ (1 ca = 60 phút)", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
                     const SizedBox(height: 8),
@@ -261,19 +262,17 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
                       Wrap(
                         spacing: 8,
                         children: _ptSchedule[_selectedDay]!.map((time) {
-                          // Kiểm tra xem giờ này đã bị ai đặt chưa
                           bool isBooked = _bookedSlots.contains(time.toString());
 
                           return ChoiceChip(
                             label: Text(isBooked ? "$time (Đã đặt)" : time.toString()),
                             selected: _selectedTime == time,
                             selectedColor: Colors.blueAccent.withOpacity(0.3),
-                            disabledColor: Colors.grey[200], // Màu xám cho nút bị khóa
+                            disabledColor: Colors.grey[200],
                             labelStyle: TextStyle(
                               color: isBooked ? Colors.grey : (_selectedTime == time ? Colors.blue[900] : Colors.black),
-                              decoration: isBooked ? TextDecoration.lineThrough : null, // Gạch ngang chữ nếu bị khóa
+                              decoration: isBooked ? TextDecoration.lineThrough : null,
                             ),
-                            // Nếu isBooked == true thì set onSelected = null để khóa nút
                             onSelected: isBooked ? null : (selected) {
                               setState(() {
                                 _selectedTime = selected ? time.toString() : null;

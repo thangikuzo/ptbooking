@@ -22,6 +22,25 @@ class PTTeachingScheduleScreen extends StatelessWidget {
     return days[day] ?? day;
   }
 
+  // 🔥 HÀM TÍNH THỜI GIAN ĐÃ TRÔI QUA
+  String _formatTimeAgo(Timestamp? timestamp) {
+    if (timestamp == null) return '';
+    DateTime date = timestamp.toDate();
+    Duration diff = DateTime.now().difference(date);
+
+    if (diff.inSeconds < 60) {
+      return 'Vừa xong';
+    } else if (diff.inMinutes < 60) {
+      return '${diff.inMinutes} phút trước';
+    } else if (diff.inHours < 24) {
+      return '${diff.inHours} giờ trước';
+    } else if (diff.inDays < 7) {
+      return '${diff.inDays} ngày trước';
+    } else {
+      return '${date.day}/${date.month}/${date.year}';
+    }
+  }
+
   Future<String> _createOrGetChatRoom(BookingModel booking) async {
     final chatQuery = await FirebaseFirestore.instance
         .collection('chats')
@@ -41,6 +60,7 @@ class PTTeachingScheduleScreen extends StatelessWidget {
       'pt_name': booking.ptName,
       'booking_id': booking.id,
       'last_message': '',
+      'last_sender_id': '', // Trường này lưu ID người gửi cuối cùng để phân biệt ai gửi
       'created_at': FieldValue.serverTimestamp(),
       'updated_at': FieldValue.serverTimestamp(),
     });
@@ -102,16 +122,23 @@ class PTTeachingScheduleScreen extends StatelessWidget {
               return StreamBuilder<QuerySnapshot>(
                 stream: _chatStream(booking),
                 builder: (context, chatSnapshot) {
-                  String lastMessage = "Chưa có tin nhắn";
+                  String displayMessage = "Chưa có tin nhắn";
+                  String timeAgo = "";
                   bool hasMessage = false;
 
-                  if (chatSnapshot.hasData &&
-                      chatSnapshot.data!.docs.isNotEmpty) {
-                    final chatData = chatSnapshot.data!.docs.first.data()
-                    as Map<String, dynamic>;
+                  if (chatSnapshot.hasData && chatSnapshot.data!.docs.isNotEmpty) {
+                    final chatData = chatSnapshot.data!.docs.first.data() as Map<String, dynamic>;
+                    final lastMessage = chatData['last_message'] ?? '';
+                    final lastSenderId = chatData['last_sender_id'] ?? '';
+                    final Timestamp? updatedAt = chatData['updated_at'] as Timestamp?;
 
-                    lastMessage = chatData['last_message'] ?? '';
-                    hasMessage = lastMessage.isNotEmpty;
+                    if (lastMessage.toString().isNotEmpty) {
+                      hasMessage = true;
+                      // Tự động kiểm tra ai gửi để ghép chữ "Bạn: " hoặc "Tên: "
+                      String prefix = (lastSenderId == currentUser.uid) ? "Bạn: " : "${booking.userName}: ";
+                      displayMessage = "$prefix$lastMessage";
+                      timeAgo = _formatTimeAgo(updatedAt);
+                    }
                   }
 
                   return Card(
@@ -151,34 +178,39 @@ class PTTeachingScheduleScreen extends StatelessWidget {
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: 8),
                           Row(
                             children: [
                               Icon(
                                 Icons.message,
                                 size: 14,
-                                color: hasMessage
-                                    ? Colors.blueAccent
-                                    : Colors.grey,
+                                color: hasMessage ? Colors.blueAccent : Colors.grey,
                               ),
-                              const SizedBox(width: 4),
+                              const SizedBox(width: 6),
                               Expanded(
                                 child: Text(
-                                  hasMessage
-                                      ? "Tin nhắn mới: $lastMessage"
-                                      : lastMessage,
+                                  displayMessage,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
-                                    color: hasMessage
-                                        ? Colors.blueAccent
-                                        : Colors.grey,
-                                    fontWeight: hasMessage
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
+                                    color: hasMessage ? Colors.black87 : Colors.grey,
+                                    fontWeight: hasMessage ? FontWeight.w500 : FontWeight.normal,
+                                    fontSize: 13,
                                   ),
                                 ),
                               ),
+                              // HIỂN THỊ THỜI GIAN BÊN PHẢI
+                              if (timeAgo.isNotEmpty) ...[
+                                const SizedBox(width: 8),
+                                Text(
+                                  timeAgo,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey[500],
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ],

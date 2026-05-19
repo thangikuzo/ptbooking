@@ -10,6 +10,7 @@ class BookingModel {
   final String day;
   final String timeSlot;
   final String status;
+  final String paymentStatus; // <-- BỔ SUNG TRƯỜNG NÀY ĐỂ KHỚP VỚI DATA
   final DateTime? createdAt;
 
   BookingModel({
@@ -22,22 +23,25 @@ class BookingModel {
     required this.day,
     required this.timeSlot,
     required this.status,
+    this.paymentStatus = 'unpaid', // Mặc định là chưa thanh toán
     this.createdAt,
   });
 
-  // Ép Map từ Firebase thành Object BookingModel
+  // Ép Map từ Firebase thành Object BookingModel an toàn tuyệt đối
   factory BookingModel.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     return BookingModel(
       id: doc.id,
-      userId: data['user_id'] ?? '',
-      userName: data['user_name'] ?? 'Ẩn danh',
-      ptId: data['pt_id'] ?? '',
-      ptName: data['pt_name'] ?? 'PT',
-      bookingDate: data['booking_date'] ?? '',
-      day: data['day'] ?? '',
-      timeSlot: data['time_slot'] ?? '',
-      status: data['status'] ?? 'pending',
+      // Thêm ?.toString() để chống lỗi văng app khi Firebase trả về kiểu Số
+      userId: data['user_id']?.toString() ?? '',
+      userName: data['user_name']?.toString() ?? 'Ẩn danh',
+      ptId: data['pt_id']?.toString() ?? '',
+      ptName: data['pt_name']?.toString() ?? 'PT',
+      bookingDate: data['booking_date']?.toString() ?? '',
+      day: data['day']?.toString() ?? '',
+      timeSlot: data['time_slot']?.toString() ?? '',
+      status: data['status']?.toString() ?? 'pending',
+      paymentStatus: data['payment_status']?.toString() ?? 'unpaid', // <-- ĐỌC DATA MỚI
       createdAt: data['created_at'] != null ? (data['created_at'] as Timestamp).toDate() : null,
     );
   }
@@ -53,6 +57,7 @@ class BookingModel {
       'day': day,
       'time_slot': timeSlot,
       'status': status,
+      'payment_status': paymentStatus, // <-- LƯU DATA MỚI
       'created_at': FieldValue.serverTimestamp(),
     };
   }
