@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
-import '../screens/pt_booking_management_screen.dart';
-import 'package:ptbooking/screens/pt_teaching_schedule_screen.dart';
-import '../screens/admin_dashboard.dart';
-import '../screens/home_screen.dart';
-import '../screens/challenge_screen.dart';
-import '../screens/history_screen.dart';
+
 import '../screens/account_screen.dart';
+import '../screens/admin_dashboard.dart';
+import '../screens/challenge_screen.dart';
 import '../screens/chat_list_screen.dart';
+import '../screens/history_screen.dart';
+import '../screens/home_screen.dart';
+import '../screens/pt_booking_management_screen.dart';
+import '../screens/pt_teaching_schedule_screen.dart';
+
 class MainWrapper extends StatefulWidget {
-  // Biến nhận Role từ màn hình Login hoặc Splash truyền sang
   final String userRole;
 
-  const MainWrapper({super.key, required this.userRole});
+  const MainWrapper({
+    super.key,
+    required this.userRole,
+  });
 
   @override
   State<MainWrapper> createState() => _MainWrapperState();
@@ -20,7 +24,6 @@ class MainWrapper extends StatefulWidget {
 class _MainWrapperState extends State<MainWrapper> {
   int _selectedIndex = 0;
 
-  // Dùng late vì chúng ta sẽ khởi tạo danh sách màn hình dựa vào Role
   late List<Widget> _screens;
   late List<BottomNavigationBarItem> _navItems;
 
@@ -31,35 +34,49 @@ class _MainWrapperState extends State<MainWrapper> {
   }
 
   void _initScreens() {
-    // 1. KIỂM TRA QUYỀN ADMIN
     if (widget.userRole == 'Admin') {
       _screens = [
-        const AdminDashboard(), // Gọi màn hình quản lý
+        const AdminDashboard(),
         AccountScreen(userRole: widget.userRole),
       ];
+
       _navItems = const [
-        BottomNavigationBarItem(icon: Icon(Icons.admin_panel_settings), label: 'Quản lý'),
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Tài khoản'),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.admin_panel_settings),
+          label: 'Quản lý',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.person),
+          label: 'Tài khoản',
+        ),
       ];
-    }
-    // 2. KIỂM TRA QUYỀN PT
-    else if (widget.userRole == 'PT') {
+    } else if (widget.userRole == 'PT') {
       _screens = [
-        const PTTeachingScheduleScreen(),    // 0. Khớp với nút Lịch dạy
-        const PTBookingManagementScreen(),   // 1. Khớp với nút Học viên
-        const ChallengeScreen(),             // 2. Khớp với nút Thử thách
-        AccountScreen(userRole: widget.userRole), // 3. Khớp với nút Tài khoản
+        const PTTeachingScheduleScreen(),
+        const PTBookingManagementScreen(),
+        const ChallengeScreen(),
+        AccountScreen(userRole: widget.userRole),
       ];
+
       _navItems = const [
-        BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: 'Lịch dạy'),
-        BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Học viên'),
-        BottomNavigationBarItem(icon: Icon(Icons.emoji_events), label: 'Thử thách'),
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Tài khoản'),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.calendar_today),
+          label: 'Lịch dạy',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.people),
+          label: 'Học viên',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.emoji_events),
+          label: 'Thử thách',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.person),
+          label: 'Tài khoản',
+        ),
       ];
-    }
-    // 3. TẤT CẢ CÁC TRƯỜNG HỢP CÒN LẠI (Bao gồm 'User' và 'Pending_PT')
-    // Họ sẽ dùng chung giao diện Khách hàng bình thường
-    else {
+    } else {
       _screens = [
         const HomeScreen(),
         const ChatListScreen(),
@@ -67,12 +84,33 @@ class _MainWrapperState extends State<MainWrapper> {
         const HistoryScreen(),
         AccountScreen(userRole: widget.userRole),
       ];
+
       _navItems = const [
-        BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'Trang chủ'),
-        BottomNavigationBarItem(icon: Icon(Icons.category_outlined), activeIcon: Icon(Icons.category), label: 'Tin nhắn'),
-        BottomNavigationBarItem(icon: Icon(Icons.emoji_events_outlined), activeIcon: Icon(Icons.emoji_events), label: 'Thử thách'),
-        BottomNavigationBarItem(icon: Icon(Icons.history_outlined), activeIcon: Icon(Icons.history), label: 'Lịch sử'),
-        BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'Tài khoản'),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.home_outlined),
+          activeIcon: Icon(Icons.home),
+          label: 'Trang chủ',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.chat_bubble_outline),
+          activeIcon: Icon(Icons.chat_bubble),
+          label: 'Tin nhắn',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.emoji_events_outlined),
+          activeIcon: Icon(Icons.emoji_events),
+          label: 'Thử thách',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.history_outlined),
+          activeIcon: Icon(Icons.history),
+          label: 'Lịch sử',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.person_outline),
+          activeIcon: Icon(Icons.person),
+          label: 'Tài khoản',
+        ),
       ];
     }
   }
@@ -93,12 +131,12 @@ class _MainWrapperState extends State<MainWrapper> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed, // fixed để nó không bị giật giật khi có 4 tab
+        type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
         selectedItemColor: const Color(0xFF2E3B55),
         unselectedItemColor: Colors.grey,
         showUnselectedLabels: true,
-        items: _navItems, // Lấy danh sách icon theo Role
+        items: _navItems,
       ),
     );
   }
