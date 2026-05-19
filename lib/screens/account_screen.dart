@@ -107,7 +107,7 @@ class _AccountScreenState extends State<AccountScreen> {
           _buildMenuItem(Icons.person_outline, "Chỉnh sửa hồ sơ", () {
             Navigator.push(context, MaterialPageRoute(builder: (context) => const EditProfileScreen()));
           }),
-          if (_userModel?.role == 'User')
+          if (_userModel?.role == 'user')
             _buildMenuItem(Icons.sports, "Đăng ký trở thành PT", () {
               Navigator.push(context, MaterialPageRoute(builder: (context) => const PTRegistrationScreen()));
             }),
