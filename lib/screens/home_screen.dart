@@ -14,7 +14,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final User? _currentUser = FirebaseAuth.instance.currentUser;
 
-  // Lấy tên người dùng (Nếu chưa có thì để mặc định)
+  // 🔥 TRẠNG THÁI LỌC CHUYÊN MÔN (Mặc định hiển thị Tất cả)
+  String _selectedCategory = 'Tất cả';
+
   String get _userName {
     if (_currentUser?.displayName != null && _currentUser!.displayName!.isNotEmpty) {
       return _currentUser!.displayName!;
@@ -22,9 +24,18 @@ class _HomeScreenState extends State<HomeScreen> {
     return "Học viên";
   }
 
+  // 🔥 MẢNG DANH MỤC ĐỂ ĐỔ UI VÀ BẮT SỰ KIỆN LỌC
+  final List<Map<String, dynamic>> _categories = [
+    {'name': 'Tất cả', 'icon': Icons.grid_view_rounded},
+    {'name': 'Gym', 'icon': Icons.fitness_center},
+    {'name': 'Yoga', 'icon': Icons.self_improvement},
+    {'name': 'Boxing', 'icon': Icons.sports_mma},
+    {'name': 'Pilates', 'icon': Icons.accessibility_new},
+    {'name': 'Crossfit', 'icon': Icons.timer},
+  ];
+
   @override
   Widget build(BuildContext context) {
-    // KHÔNG dùng bottomNavigationBar ở đây vì MainWrapper đã quản lý
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       body: SafeArea(
@@ -38,20 +49,20 @@ class _HomeScreenState extends State<HomeScreen> {
               // 2. Search Bar
               _buildSearchBar(),
 
-              // 3. Upcoming Session (Tạm thời là UI tĩnh)
+              // 3. Upcoming Session
               _buildUpcomingSession(),
 
               // 4. Promotion Banner
               _buildPromotionBanner(),
 
-              // 5. Categories
+              // 5. Categories (Thanh lọc chuyên môn đã được cơ cấu lại)
               _buildCategories(),
 
-              // 6. Featured PTs (Đã nối Firebase)
+              // 6. Featured PTs (Danh sách PT đã kết hợp lọc chuyên môn + tính sao)
               _buildSectionHeader("PT Nổi bật", true),
               _buildFeaturedPTs(),
 
-              // 7. New Arrivals (UI mẫu)
+              // 7. New Arrivals
               _buildSectionHeader("PT Mới gia nhập", false),
               _buildNewArrivals(),
 
@@ -150,19 +161,15 @@ class _HomeScreenState extends State<HomeScreen> {
               color: Colors.white.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.calendar_today,
-                color: Color(0xFFFFA515), size: 20),
+            child: const Icon(Icons.calendar_today, color: Color(0xFFFFA515), size: 20),
           ),
           const SizedBox(width: 12),
           const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Buổi tập tiếp theo",
-                    style: TextStyle(color: Color(0xFF98A5C4), fontSize: 12)),
-                Text("18:00 - Hôm nay với PT Minh Quân",
-                    style: TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold)),
+                Text("Buổi tập tiếp theo", style: TextStyle(color: Color(0xFF98A5C4), fontSize: 12)),
+                Text("18:00 - Hôm nay với PT Minh Quân", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
@@ -189,8 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Stack(
         children: [
           Positioned(
-            right: -20,
-            bottom: -20,
+            right: -20, bottom: -20,
             child: Icon(Icons.fitness_center, size: 140, color: Colors.white.withOpacity(0.3)),
           ),
           Padding(
@@ -203,11 +209,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   width: 200,
                   child: Text(
                     "Giảm 20% cho buổi tập đầu tiên",
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        height: 1.2),
+                    style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold, height: 1.2),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -216,13 +218,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: const Color(0xFF18253E),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 8),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   ),
-                  child: const Text("Nhận ưu đãi ngay",
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Text("Nhận ưu đãi ngay", style: TextStyle(fontWeight: FontWeight.bold)),
                 )
               ],
             ),
@@ -232,42 +231,55 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // 🔥 THANH CHỌN CATEGORY CÓ TRẠNG THÁI ĐỔI MÀU KHI SELECTED
   Widget _buildCategories() {
-    final categories = [
-      {'name': 'Gym', 'icon': Icons.fitness_center},
-      {'name': 'Yoga', 'icon': Icons.self_improvement},
-      {'name': 'Boxing', 'icon': Icons.sports_mma},
-      {'name': 'Pilates', 'icon': Icons.accessibility_new},
-      {'name': 'Crossfit', 'icon': Icons.timer},
-    ];
-
     return SizedBox(
-      height: 140,
+      height: 140, // Đã fix chiều cao an toàn chống overflow chữ
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 20),
-        itemCount: categories.length,
+        itemCount: _categories.length,
         itemBuilder: (context, index) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Column(
-              children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, 2))],
+          final cat = _categories[index];
+          bool isSelected = _selectedCategory == cat['name'];
+
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                _selectedCategory = cat['name'] as String;
+              });
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: Column(
+                children: [
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      // Nếu được chọn -> đổi sang nền Xanh Navy đậm, ngược lại nền trắng
+                      color: isSelected ? const Color(0xFF18253E) : Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: isSelected ? const Color(0xFF18253E) : const Color(0xFFE1E3E4)),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, 2))],
+                    ),
+                    child: Icon(
+                      cat['icon'] as IconData,
+                      // Nếu được chọn -> đổi icon sang màu trắng tinh khôi
+                      color: isSelected ? Colors.white : const Color(0xFF18253E),
+                    ),
                   ),
-                  child: Icon(categories[index]['icon'] as IconData,
-                      color: const Color(0xFF18253E)),
-                ),
-                const SizedBox(height: 8),
-                Text(categories[index]['name'] as String,
-                    style: const TextStyle(
-                        fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF18253E))),
-              ],
+                  const SizedBox(height: 8),
+                  Text(
+                    cat['name'] as String,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: isSelected ? const Color(0xFFFFA515) : const Color(0xFF18253E), // Chọn thì chữ màu cam rực rỡ
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },
@@ -281,26 +293,18 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title,
-              style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF18253E))),
+          Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF18253E))),
           if (showAction)
             TextButton(
               onPressed: () {},
-              child: const Text("Xem tất cả",
-                  style: TextStyle(
-                      color: Color(0xFFFFA515), fontWeight: FontWeight.bold)),
+              child: const Text("Xem tất cả", style: TextStyle(color: Color(0xFFFFA515), fontWeight: FontWeight.bold)),
             ),
         ],
       ),
     );
   }
 
-  // ==========================================================
-  // 🔥 ĐỔ DỮ LIỆU PT TỪ FIREBASE VÀO GIAO DIỆN MỚI
-  // ==========================================================
+  // 🔥 DANH SÁCH PT NỔI BẬT: ĐÃ ỐP LOGIC LỌC CHUYÊN MÔN VÀ TÍNH SAO THẬT
   Widget _buildFeaturedPTs() {
     return SizedBox(
       height: 250,
@@ -316,12 +320,30 @@ class _HomeScreenState extends State<HomeScreen> {
             return const Center(child: Text("Chưa có PT nào."));
           }
 
+          // 1. Ép kiểu dữ liệu sang List<UserModel>
+          List<UserModel> pts = docs.map((doc) => UserModel.fromFirestore(doc)).toList();
+
+          // 2. 🔥 TIẾN HÀNH LỌC THEO CATEGORY ĐƯỢC CHỌN (Tìm kiếm chuỗi chứa từ khóa)
+          if (_selectedCategory != 'Tất cả') {
+            pts = pts.where((pt) {
+              final specialty = pt.specialty?.toLowerCase() ?? '';
+              return specialty.contains(_selectedCategory.toLowerCase());
+            }).toList();
+          }
+
+          // Trường hợp lọc xong không có ông PT nào khớp
+          if (pts.isEmpty) {
+            return const Center(
+              child: Text("Không có HLV nào thuộc chuyên môn này.", style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey)),
+            );
+          }
+
           return ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 15),
-            itemCount: docs.length,
+            itemCount: pts.length,
             itemBuilder: (context, index) {
-              UserModel pt = UserModel.fromFirestore(docs[index]);
+              UserModel pt = pts[index];
 
               return GestureDetector(
                 onTap: () {
@@ -348,24 +370,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                         child: Stack(
                           children: [
-                            // Render Ảnh PT từ Firebase
                             (pt.avatar != null && pt.avatar!.isNotEmpty)
                                 ? Image.network(pt.avatar!, height: 160, width: double.infinity, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _buildErrorImage())
                                 : _buildErrorImage(),
                             Positioned(
-                              top: 10,
-                              right: 10,
+                              top: 10, right: 10,
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.9),
-                                    borderRadius: BorderRadius.circular(8)),
-                                child: const Row(
-                                  children: [
-                                    Icon(Icons.star, color: Color(0xFFFFA515), size: 14),
-                                    Text("4.9", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                                  ],
-                                ),
+                                decoration: BoxDecoration(color: Colors.white.withOpacity(0.9), borderRadius: BorderRadius.circular(8)),
+                                child: _buildPTCardRating(pt.uid), // 🔥 ĐÃ THAY BẰNG HÀM ĐẾM SAO REAL-TIME
                               ),
                             )
                           ],
@@ -376,11 +389,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(pt.name, maxLines: 1, overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF18253E))),
+                            Text(pt.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF18253E))),
                             const SizedBox(height: 4),
-                            Text(pt.specialty ?? "Chuyên gia Thể hình", maxLines: 1, overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(color: Color(0xFF855300), fontSize: 12, fontWeight: FontWeight.bold)),
+                            Text(pt.specialty ?? "Huấn luyện viên", maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF855300), fontSize: 12, fontWeight: FontWeight.bold)),
                           ],
                         ),
                       )
@@ -395,7 +406,46 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Widget hiển thị nếu PT chưa có ảnh đại diện
+// 🔥 TIỂU COMPONENT: TỰ ĐỘNG ĐẾM SAO TRUNG BÌNH NGOÀI HOME
+  Widget _buildPTCardRating(String ptUid) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance.collection('reviews').where('pt_id', isEqualTo: ptUid).snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          // 🔥 TRƯỜNG HỢP CHƯA CÓ ĐÁNH GIÁ -> HIỂN THỊ 0.0 VÀ SAO XÁM
+          return const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.star_border, color: Colors.grey, size: 14), // Đổi thành sao rỗng xám
+              SizedBox(width: 4),
+              Text("0.0", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey)),
+            ],
+          );
+        }
+
+        var reviewDocs = snapshot.data!.docs;
+        double totalStars = 0.0;
+        for (var doc in reviewDocs) {
+          var data = doc.data() as Map<String, dynamic>;
+          totalStars += data['rating'] is num ? (data['rating'] as num).toDouble() : 5.0;
+        }
+        double avgRating = totalStars / reviewDocs.length;
+
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.star, color: Color(0xFFFFA515), size: 14), // Có điểm thì sao vàng cam
+            const SizedBox(width: 4),
+            Text(
+              avgRating.toStringAsFixed(1),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF18253E)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildErrorImage() {
     return Container(
       height: 160, width: double.infinity, color: Colors.grey[200],
@@ -403,9 +453,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ==========================================================
-  // DỮ LIỆU MẪU CHO MỤC PT MỚI (Có thể nối Firebase sau)
-  // ==========================================================
   Widget _buildNewArrivals() {
     return ListView.builder(
       shrinkWrap: true,
@@ -436,8 +483,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(index == 0 ? "Phan Anh" : "Trần Long", style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF18253E))),
-                    Text(index == 0 ? "Chuyên gia Pilates • 5 năm" : "Giảm cân • Dinh dưỡng",
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                    Text(index == 0 ? "Chuyên gia Pilates • 5 năm" : "Giảm cân • Dinh dưỡng", style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
                   ],
                 ),
               ),

@@ -289,7 +289,7 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
               double totalStars = reviews.fold(0, (sum, item) => sum + item.rating);
               avgRating = totalStars / reviews.length;
             } else {
-              avgRating = 5.0; // Mặc định 5 sao nếu chưa có ai đánh giá
+              avgRating = 0.0;
             }
 
             return SingleChildScrollView(
