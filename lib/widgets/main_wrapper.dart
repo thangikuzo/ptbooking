@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../screens/account_screen.dart';
 import '../screens/pt_booking_management_screen.dart';
 import '../screens/admin/admin_dashboard.dart';
@@ -7,6 +9,8 @@ import '../screens/challenge_screen.dart';
 import '../screens/chat_list_screen.dart';
 import '../screens/history_screen.dart';
 import '../screens/pt_teaching_schedule_screen.dart';
+import '../services/notification_service.dart';
+import 'dart:async';
 
 class MainWrapper extends StatefulWidget {
   final String userRole;
@@ -25,11 +29,51 @@ class _MainWrapperState extends State<MainWrapper> {
 
   late List<Widget> _screens;
   late List<BottomNavigationBarItem> _navItems;
+  StreamSubscription<QuerySnapshot>? _notificationSubscription;
+  bool _isFirstSnapshot = true;
 
   @override
   void initState() {
     super.initState();
     _initScreens();
+    _setupNotificationListener();
+  }
+
+  void _setupNotificationListener() {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _notificationSubscription = FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('notifications')
+          .orderBy('createdAt', descending: false)
+          .snapshots()
+          .listen((snapshot) {
+        if (_isFirstSnapshot) {
+          _isFirstSnapshot = false;
+          return;
+        }
+        for (var change in snapshot.docChanges) {
+          if (change.type == DocumentChangeType.added) {
+            var data = change.doc.data();
+            if (data != null) {
+              String senderName = data['senderName'] ?? 'Ai đó';
+              String message = data['message'] ?? 'đã gửi một thông báo.';
+              NotificationService().showInteractionNotification(
+                'Thông báo Thử thách',
+                '$senderName $message',
+              );
+            }
+          }
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _notificationSubscription?.cancel();
+    super.dispose();
   }
 
   void _initScreens() {
@@ -67,7 +111,7 @@ class _MainWrapperState extends State<MainWrapper> {
           label: 'Học viên',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.emoji_events),
+          icon: _NotificationBadgeIcon(iconData: Icons.emoji_events),
           label: 'Thử thách',
         ),
         BottomNavigationBarItem(
@@ -96,8 +140,8 @@ class _MainWrapperState extends State<MainWrapper> {
           label: 'Tin nhắn',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.emoji_events_outlined),
-          activeIcon: Icon(Icons.emoji_events),
+          icon: _NotificationBadgeIcon(iconData: Icons.emoji_events_outlined),
+          activeIcon: _NotificationBadgeIcon(iconData: Icons.emoji_events),
           label: 'Thử thách',
         ),
         BottomNavigationBarItem(
@@ -137,6 +181,47 @@ class _MainWrapperState extends State<MainWrapper> {
         showUnselectedLabels: true,
         items: _navItems,
       ),
+    );
+  }
+}
+
+class _NotificationBadgeIcon extends StatelessWidget {
+  final IconData iconData;
+  const _NotificationBadgeIcon({required this.iconData});
+
+  @override
+  Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return Icon(iconData);
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('notifications')
+          .where('isRead', isEqualTo: false)
+          .snapshots(),
+      builder: (context, snapshot) {
+        bool hasUnread = snapshot.hasData && snapshot.data!.docs.isNotEmpty;
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Icon(iconData),
+            if (hasUnread)
+              Positioned(
+                right: -2,
+                top: -2,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }

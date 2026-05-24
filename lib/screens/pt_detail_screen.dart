@@ -259,6 +259,65 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
     String? certUrl = widget.ptData['certificate_url'];
 
     return Scaffold(
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(title: const Text("Chi tiết PT"), backgroundColor: const Color(0xFF2E3B55)),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // --- THÔNG TIN PT ---
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 40,
+                  backgroundColor: Colors.grey[200],
+                  backgroundImage: (widget.ptData['avatar'] != null && widget.ptData['avatar'].toString().isNotEmpty)
+                      ? NetworkImage(widget.ptData['avatar'])
+                      : null,
+                  child: (widget.ptData['avatar'] == null || widget.ptData['avatar'].toString().isEmpty)
+                      ? const Icon(Icons.person, size: 40, color: Colors.grey)
+                      : null,
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 4),
+                      Text("Chuyên môn: $specialty", style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 4),
+                      Text("Kinh nghiệm: $experience năm", style: const TextStyle(color: Colors.grey)),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(Icons.people, color: Colors.blue, size: 16),
+                          const SizedBox(width: 4),
+                          Text("${widget.ptData['followerCount'] ?? 0} người theo dõi", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
+                        ],
+                      ),
+                    ],
+                  ),
+                )
+              ],
+            ),
+            const SizedBox(height: 20),
+            const Text("Giới thiệu", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text(bio, style: const TextStyle(fontSize: 14, height: 1.5)),
+            const Divider(height: 40),
+
+            // --- LỊCH RẢNH (SCHEDULE) ---
+            const Text("Chọn lịch tập", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+
+            if (_isLoadingSchedule)
+              const Center(child: CircularProgressIndicator())
+            else if (_ptSchedule.isEmpty)
+              const Center(child: Text("PT này hiện chưa có lịch rảnh.", style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic)))
+            else
+              Column(
       backgroundColor: bgColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
