@@ -54,8 +54,6 @@ class HistoryScreen extends StatelessWidget {
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: const Text("Lịch sử đặt lịch"),
-        backgroundColor: const Color(0xFF2E3B55),
-        elevation: 0,
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance

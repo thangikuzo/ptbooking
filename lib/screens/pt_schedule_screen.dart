@@ -87,7 +87,7 @@ class _PTScheduleScreenState extends State<PTScheduleScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Cài đặt giờ làm việc"),
-        backgroundColor: const Color(0xFF2E3B55),
+
         actions: [
           if (_isLoading)
             const Center(child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator(color: Colors.white)))

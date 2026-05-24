@@ -22,7 +22,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void _checkLoginAndRole() async {
     // Đợi 1.5 giây cho hiệu ứng khởi động
-    await Future.delayed(const Duration(milliseconds: 1500));
+    await Future.delayed(const Duration(milliseconds: 1000));
 
     User? currentUser = FirebaseAuth.instance.currentUser;
 

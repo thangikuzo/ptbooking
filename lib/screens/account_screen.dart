@@ -20,7 +20,10 @@ import 'dev_tool_screen.dart';
 class AccountScreen extends StatefulWidget {
   final String userRole;
 
-  const AccountScreen({super.key, required this.userRole});
+  const AccountScreen({
+    super.key,
+    required this.userRole,
+  });
 
   @override
   State<AccountScreen> createState() => _AccountScreenState();
@@ -28,6 +31,7 @@ class AccountScreen extends StatefulWidget {
 
 class _AccountScreenState extends State<AccountScreen> {
   final AuthService _authService = AuthService();
+
   UserModel? _userModel;
 
   @override
@@ -46,6 +50,24 @@ class _AccountScreenState extends State<AccountScreen> {
         if (!doc.exists) {
           return const Scaffold(body: Center(child: Text("Không tìm thấy dữ liệu")));
         }
+  Future<void> _fetchUserData() async {
+    UserModel? user = await _authService.getUserData();
+
+    setState(() {
+      _userModel = user;
+      _isLoading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
 
         _userModel = UserModel.fromFirestore(doc);
 
@@ -67,11 +89,31 @@ class _AccountScreenState extends State<AccountScreen> {
               children: [
                 _buildHeader(roleDisplay, roleColor),
                 const SizedBox(height: 10),
+    if (_userModel?.role == "PT") {
+      roleDisplay = "Huấn luyện viên (PT)";
+      roleColor = const Color(0xFFFCA311);
+    } else if (_userModel?.role == "Admin") {
+      roleDisplay = "Quản trị viên";
+      roleColor = Colors.redAccent;
+    }
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF6F7FB),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(
+              roleDisplay,
+              roleColor,
+            ),
+            const SizedBox(height: 18),
+
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding:
+                const EdgeInsets.symmetric(horizontal: 16),
                 children: [
-                  if (_userModel?.role == 'User') ...[
+                  if (_userModel?.role == 'user') ...[
                     _buildLoginStreak(),
                     const SizedBox(height: 16),
                   ],
@@ -84,7 +126,7 @@ class _AccountScreenState extends State<AccountScreen> {
                     );
                   }),
 
-                  if (_userModel?.role == 'User') ...[
+                  if (_userModel?.role == 'user') ...[
                     _buildMenuItem(Icons.card_giftcard, "Phần thưởng cấp độ", () {
                       Navigator.push(
                         context,
@@ -122,17 +164,39 @@ class _AccountScreenState extends State<AccountScreen> {
                     }),
                   ],
 
-                  if (_userModel?.role == 'User')
+                  if (_userModel?.role == 'user')
                     _buildMenuItem(Icons.bar_chart, "Tiến độ của tôi", () {
+
+                  _buildMenuItem(
+                    Icons.person_outline,
+                    "Chỉnh sửa hồ sơ",
+                        () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const MyProgressScreen(),
+                          builder: (_) =>
+                          const EditProfileScreen(),
                         ),
                       );
-                    }),
+                    },
+                  ),
 
-                  if (_userModel?.role == 'User')
+                  if (_userModel?.role == "user")
+                    _buildMenuItem(
+                      Icons.bar_chart,
+                      "Tiến độ của tôi",
+                          () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                            const MyProgressScreen(),
+                          ),
+                        );
+                      },
+                    ),
+
+                  if (_userModel?.role == "user")
                     _buildMenuItem(
                       Icons.sports_gymnastics,
                       "Đăng ký trở thành PT",
@@ -140,23 +204,29 @@ class _AccountScreenState extends State<AccountScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const PTRegistrationScreen(),
+                            builder: (_) =>
+                            const PTRegistrationScreen(),
                           ),
                         );
                       },
                     ),
 
-                  if (_userModel?.role == 'PT')
-                    _buildMenuItem(Icons.schedule, "Cài đặt giờ làm việc", () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const PTScheduleScreen(),
-                        ),
-                      );
-                    }),
+                  if (_userModel?.role == "PT")
+                    _buildMenuItem(
+                      Icons.schedule,
+                      "Cài đặt giờ làm việc",
+                          () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                            const PTScheduleScreen(),
+                          ),
+                        );
+                      },
+                    ),
 
-                  if (_userModel?.role == 'PT')
+                  if (_userModel?.role == "PT")
                     _buildMenuItem(
                       Icons.insights,
                       "Đánh giá tiến độ học viên",
@@ -164,7 +234,8 @@ class _AccountScreenState extends State<AccountScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const StudentProgressScreen(),
+                            builder: (_) =>
+                            const StudentProgressScreen(),
                           ),
                         );
                       },
@@ -184,19 +255,28 @@ class _AccountScreenState extends State<AccountScreen> {
                   }),
                   const SizedBox(height: 10),
 
-                  _buildMenuItem(Icons.logout, "Đăng xuất", () async {
-                    await _authService.logout();
+                  _buildMenuItem(
+                    Icons.logout,
+                    "Đăng xuất",
+                        () async {
+                      await _authService.logout();
 
-                    if (mounted) {
-                      Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(builder: (_) => const LoginScreen()),
-                            (route) => false,
-                      );
-                    }
-                  }, isDestructive: true),
+                      if (mounted) {
+                        Navigator.of(context)
+                            .pushAndRemoveUntil(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                            const LoginScreen(),
+                          ),
+                              (route) => false,
+                        );
+                      }
+                    },
+                    isDestructive: true,
+                  ),
                 ],
               ),
-            ),
+            )
           ],
         ),
       ),
@@ -285,7 +365,9 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  Widget _buildHeader(String roleDisplay, Color roleColor) {
+  Widget _buildHeader(
+      String roleDisplay,
+      Color roleColor) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -341,22 +423,54 @@ class _AccountScreenState extends State<AccountScreen> {
                 ],
               ),
             ),
+          CircleAvatar(
+            radius: 42,
+            backgroundColor: Colors.white24,
+            backgroundImage:
+            (_userModel?.avatar != null &&
+                _userModel!.avatar!.isNotEmpty)
+                ? NetworkImage(
+              _userModel!.avatar!,
+            )
+                : null,
+            child:
+            (_userModel?.avatar == null ||
+                _userModel!
+                    .avatar!.isEmpty)
+                ? const Icon(
+              Icons.person,
+              size: 45,
+              color: Colors.white,
+            )
+                : null,
           ),
+
           const SizedBox(height: 14),
+
           Text(
-            _userModel?.name ?? "Người dùng",
+            _userModel?.name ??
+                "Người dùng",
             style: const TextStyle(
               color: Colors.white,
               fontSize: 22,
               fontWeight: FontWeight.bold,
               shadows: [Shadow(color: Colors.black26, offset: Offset(1, 1), blurRadius: 2)]
+              fontWeight:
+              FontWeight.bold,
             ),
           ),
+
           const SizedBox(height: 6),
+
           Text(
             _userModel?.email ?? "",
             style: const TextStyle(color: Colors.white, fontSize: 13),
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 13,
+            ),
           ),
+
           const SizedBox(height: 12),
           if (_userModel?.role == 'User')
             Row(
@@ -395,6 +509,38 @@ class _AccountScreenState extends State<AccountScreen> {
         color: bgColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+
+          _buildRoleBadge(
+            roleDisplay,
+            roleColor,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRoleBadge(
+      String text,
+      Color color) {
+    return Container(
+      padding:
+      const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 5,
+      ),
+      decoration: BoxDecoration(
+        color: color.withOpacity(
+          0.15,
+        ),
+        borderRadius:
+        BorderRadius.circular(
+          20,
+        ),
+        border: Border.all(
+          color: color.withOpacity(
+            0.4,
+          ),
+        ),
       ),
       child: Text(
         text,
@@ -402,6 +548,9 @@ class _AccountScreenState extends State<AccountScreen> {
           fontSize: 12,
           fontWeight: FontWeight.bold,
           color: textColor,
+          fontWeight:
+          FontWeight.bold,
+          color: color,
         ),
       ),
     );
@@ -415,41 +564,82 @@ class _AccountScreenState extends State<AccountScreen> {
         bool isDestructive = false,
       }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin:
+      const EdgeInsets.only(
+        bottom: 12,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius:
+        BorderRadius.circular(
+          18,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black
+                .withOpacity(
+              0.04,
+            ),
             blurRadius: 10,
-            offset: const Offset(0, 4),
-          )
+            offset:
+            const Offset(
+              0,
+              4,
+            ),
+          ),
         ],
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+        contentPadding:
+        const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 4,
+        ),
         leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
+          padding:
+          const EdgeInsets.all(
+            10,
+          ),
+          decoration:
+          BoxDecoration(
             color: isDestructive
-                ? Colors.red.withOpacity(0.1)
-                : const Color(0xFF2E3B55).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
+                ? Colors.red
+                .withOpacity(
+                0.1)
+                : const Color(
+                0xFF2E3B55)
+                .withOpacity(
+                0.1),
+            borderRadius:
+            BorderRadius
+                .circular(
+              12,
+            ),
           ),
           child: Icon(
             icon,
-            color: isDestructive ? Colors.red : const Color(0xFF2E3B55),
+            color:
+            isDestructive
+                ? Colors.red
+                : const Color(
+                0xFF2E3B55),
           ),
         ),
         title: Text(
           title,
           style: TextStyle(
-            color: isDestructive ? Colors.red : Colors.black87,
-            fontWeight: FontWeight.w600,
+            color:
+            isDestructive
+                ? Colors.red
+                : Colors.black87,
+            fontWeight:
+            FontWeight.w600,
           ),
         ),
-        trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+        trailing: const Icon(
+          Icons.chevron_right,
+          color: Colors.grey,
+        ),
         onTap: onTap,
       ),
     );

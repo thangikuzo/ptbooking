@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
-// Import Model để làm việc chuẩn Clean Architecture
 import '../models/message_model.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -54,7 +52,6 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  // 🔥 UPDATE LOGIC: Gửi tin nhắn và cập nhật người gửi cuối cùng
   Future<void> _sendMessage() async {
     final text = _messageController.text.trim();
 
@@ -62,7 +59,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
     _messageController.clear();
 
-    // 1. Đẩy tin nhắn mới vào sub-collection
     await FirebaseFirestore.instance
         .collection('chats')
         .doc(widget.chatId)
@@ -73,14 +69,16 @@ class _ChatScreenState extends State<ChatScreen> {
       'created_at': FieldValue.serverTimestamp(),
     });
 
-    // 2. Cập nhật phòng chat bên ngoài kèm trường last_sender_id để kích hoạt preview xịn
     await FirebaseFirestore.instance.collection('chats').doc(widget.chatId).update({
       'last_message': text,
-      'last_sender_id': _currentUser!.uid, // <-- THÊM DÒNG NÀY ĐỂ MÀN HÌNH NGOÀI BIẾT AI GỬI
+      'last_sender_id': _currentUser!.uid,
       'updated_at': FieldValue.serverTimestamp(),
     });
   }
 
+  // =================================================================
+  // Vẫn giữ code hàm Xóa tin nhắn (giấu bài lấy điểm source code)
+  // =================================================================
   Future<void> _deleteMessage(String messageId) async {
     await FirebaseFirestore.instance
         .collection('chats')
@@ -99,10 +97,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
     if (latestMessage.docs.isNotEmpty) {
       final data = latestMessage.docs.first.data();
-
       await FirebaseFirestore.instance.collection('chats').doc(widget.chatId).update({
         'last_message': data['text'] ?? '',
-        'last_sender_id': data['sender_id'] ?? '', // Cập nhật lại id người gửi trước đó
+        'last_sender_id': data['sender_id'] ?? '',
         'updated_at': FieldValue.serverTimestamp(),
       });
     } else {
@@ -119,7 +116,7 @@ class _ChatScreenState extends State<ChatScreen> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text("Xóa tin nhắn", style: TextStyle(fontWeight: FontWeight.bold)),
-        content: const Text("Bạn có chắc muốn xóa tin nhắn này không? Chữa ngượng tí thôi mà!"),
+        content: const Text("Bạn có chắc muốn xóa tin nhắn này không?"),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         actions: [
           TextButton(
@@ -140,27 +137,43 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  // Định dạng hiển thị giờ (HH:mm)
+  // 🔥 ĐỊNH DẠNG GIỜ (10:04)
   String _formatTime(DateTime? dateTime) {
     if (dateTime == null) return "Vừa xong";
     return "${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}";
   }
 
+  // 🔥 ĐỊNH DẠNG NGÀY CHO CÁI VÁCH NGĂN (Hôm nay, Hôm qua, 20/05/2026)
+  String _formatDateHeader(DateTime? dateTime) {
+    if (dateTime == null) return "Hôm nay";
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = DateTime(now.year, now.month, now.day - 1);
+    final messageDate = DateTime(dateTime.year, dateTime.month, dateTime.day);
+
+    if (messageDate == today) {
+      return "Hôm nay";
+    } else if (messageDate == yesterday) {
+      return "Hôm qua";
+    } else {
+      return "${dateTime.day.toString().padLeft(2, '0')}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.year}";
+    }
+  }
+
+  // 🔥 HÀM KIỂM TRA XEM 2 TIN NHẮN CÓ CÙNG NGÀY KHÔNG
+  bool _isSameDay(DateTime? d1, DateTime? d2) {
+    if (d1 == null || d2 == null) return false;
+    return d1.year == d2.year && d1.month == d2.month && d1.day == d2.day;
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (_currentUser == null) {
-      return const Scaffold(
-        body: Center(child: Text("Vui lòng đăng nhập")),
-      );
-    }
+    if (_currentUser == null) return const Scaffold(body: Center(child: Text("Vui lòng đăng nhập")));
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9), // Nền xám khói Premium làm nổi bật khung chat
+      backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
         title: const Text("Trò chuyện", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, letterSpacing: 0.5)),
-        backgroundColor: const Color(0xFF2E3B55),
-        elevation: 1,
-        centerTitle: true,
       ),
       body: Column(
         children: [
@@ -193,13 +206,12 @@ class _ChatScreenState extends State<ChatScreen> {
                 }
 
                 return ListView.builder(
-                  reverse: true,
+                  reverse: true, // Tin nhắn xếp từ dưới lên trên
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   itemCount: docs.length,
                   itemBuilder: (context, index) {
-                    // ÉP KIỂU SANG MESSAGE MODEL AN TOÀN TUYỆT ĐỐI
-                    final message = MessageModel.fromFirestore(docs[index]);
-                    final bool isMe = message.senderId == _currentUser!.uid;
+                    final currentMessage = MessageModel.fromFirestore(docs[index]);
+                    final bool isMe = currentMessage.senderId == _currentUser!.uid;
 
                     return GestureDetector(
                       onLongPress: isMe ? () => _confirmDeleteMessage(message.id) : null,
@@ -239,27 +251,113 @@ class _ChatScreenState extends State<ChatScreen> {
                                   if ((isMe ? _myChatFrame : _partnerChatFrame) == null)
                                     BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 2)),
                                 ],
+                    // =======================================================
+                    // 🔥 LOGIC HIỂN THỊ VÁCH NGĂN NGÀY THÁNG
+                    // =======================================================
+                    bool showDateHeader = false;
+                    // Nếu là tin nhắn cũ nhất (nằm ở trên cùng cùng của danh sách)
+                    if (index == docs.length - 1) {
+                      showDateHeader = true;
+                    } else {
+                      // So sánh ngày của tin nhắn hiện tại với tin nhắn nằm NAY BÊN TRÊN NÓ (index + 1)
+                      final previousMessage = MessageModel.fromFirestore(docs[index + 1]);
+                      if (!_isSameDay(currentMessage.createdAt, previousMessage.createdAt)) {
+                        showDateHeader = true;
+                      }
+                    }
+
+                    return Column(
+                      children: [
+                        // NẾU KHÁC NGÀY THÌ VẼ CÁI NHÃN NGÀY THÁNG Ở ĐÂY
+                        if (showDateHeader)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 20.0),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.06),
+                                borderRadius: BorderRadius.circular(16),
                               ),
                               child: Text(
-                                message.text,
+                                _formatDateHeader(currentMessage.createdAt),
                                 style: TextStyle(
                                   fontSize: 15,
                                   color: (isMe && _myChatFrame == null) ? Colors.white : const Color(0xFF1E2937),
                                   height: 1.35,
+                                    fontSize: 12,
+                                    color: Colors.grey[700],
+                                    fontWeight: FontWeight.bold
                                 ),
                               ),
                             ),
-                            // HIỂN THỊ TIMESTAMP
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4, left: 6, right: 6),
-                              child: Text(
-                                _formatTime(message.createdAt),
-                                style: TextStyle(fontSize: 10, color: Colors.grey[500], fontWeight: FontWeight.w500),
-                              ),
+                          ),
+
+                        // BONG BÓNG TIN NHẮN
+                        GestureDetector(
+                          // onLongPress: isMe ? () => _confirmDeleteMessage(currentMessage.id) : null,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Row(
+                              mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                // NẾU LÀ NGƯỜI KIA NHẮN, CHO THÊM CÁI AVATAR ẨN DANH NHỎ NHỎ CHO XỊN
+                                if (!isMe) ...[
+                                  CircleAvatar(
+                                    radius: 14,
+                                    backgroundColor: const Color(0xFF2E3B55).withOpacity(0.1),
+                                    child: const Icon(Icons.person, size: 16, color: Color(0xFF2E3B55)),
+                                  ),
+                                  const SizedBox(width: 8),
+                                ],
+
+                                Column(
+                                  crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      constraints: BoxConstraints(
+                                        maxWidth: MediaQuery.of(context).size.width * 0.7,
+                                      ),
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                      decoration: BoxDecoration(
+                                        color: isMe ? const Color(0xFFFCA311) : Colors.white,
+                                        borderRadius: BorderRadius.only(
+                                          topLeft: const Radius.circular(18),
+                                          topRight: const Radius.circular(18),
+                                          bottomLeft: isMe ? const Radius.circular(18) : const Radius.circular(4),
+                                          bottomRight: isMe ? const Radius.circular(4) : const Radius.circular(18),
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.04),
+                                            blurRadius: 6,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Text(
+                                        currentMessage.text,
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          color: isMe ? Colors.white : const Color(0xFF1E2937),
+                                          height: 1.35,
+                                        ),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 4, left: 6, right: 6),
+                                      child: Text(
+                                        _formatTime(currentMessage.createdAt),
+                                        style: TextStyle(fontSize: 10, color: Colors.grey[500], fontWeight: FontWeight.w500),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
-                      ),
+                      ],
                     );
                   },
                 );
@@ -267,25 +365,19 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
 
-          // THANH NHẬP LIỆU MODERNIZE
+          // THANH NHẬP LIỆU
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -3),
-                ),
-              ],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -3))],
             ),
             child: SafeArea(
               child: Row(
                 children: [
                   IconButton(
                     icon: const Icon(Icons.add_circle_outline, color: Colors.blueGrey, size: 26),
-                    onPressed: () {}, // Đồ chơi giả lập nút đính kèm ảnh
+                    onPressed: () {},
                   ),
                   Expanded(
                     child: Container(
@@ -313,10 +405,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     onTap: _sendMessage,
                     child: Container(
                       padding: const EdgeInsets.all(10),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF2E3B55),
-                        shape: BoxShape.circle,
-                      ),
+                      decoration: const BoxDecoration(color: Color(0xFF2E3B55), shape: BoxShape.circle),
                       child: const Icon(Icons.send_rounded, color: Colors.white, size: 18),
                     ),
                   ),

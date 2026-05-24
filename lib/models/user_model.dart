@@ -42,6 +42,8 @@ class UserModel {
   final double rating;
   final int followerCount;
   final int challengeCount;
+  final String? certificateUrl; // 🔥 BỔ SUNG TRƯỜNG CHỨNG CHỈ
+  final String? cvUrl;          // 🔥 BỔ SUNG TRƯỜNG CV
 
   UserModel({
     required this.uid,
@@ -75,6 +77,8 @@ class UserModel {
     this.rating = 0.0,
     this.followerCount = 0,
     this.challengeCount = 0,
+    this.certificateUrl,
+    this.cvUrl,
   });
 
   // Ép kiểu từ dữ liệu Firebase về Object UserModel an toàn
@@ -112,7 +116,6 @@ class UserModel {
       avatar: data['avatar']?.toString(),
       role: data['role']?.toString() ?? 'User',
 
-      // Thêm ?.toString() vào để chống lỗi hiện chữ "null"
       phone: data['phone']?.toString(),
       gender: data['gender']?.toString(),
       address: data['address']?.toString(),
@@ -138,8 +141,12 @@ class UserModel {
       rating: (data['rating'] as num?)?.toDouble() ?? 0.0,
       followerCount: data['followerCount'] as int? ?? 0,
       challengeCount: data['challengeCount'] as int? ?? 0,
+      specialty: data['specialty']?.toString(),
+      experience: data['experience']?.toString(),
+      bio: data['bio']?.toString(),
+      certificateUrl: data['certificate_url']?.toString(), // 🔥 ĐỌC LINK CHỨNG CHỈ
+      cvUrl: data['cv_url']?.toString(),                   // 🔥 ĐỌC LINK CV
 
-      // Xử lý bọc thép cho các trường Số (int, double)
       age: data['age'] is int ? data['age'] : int.tryParse(data['age']?.toString() ?? ''),
       height: data['height'] is num ? data['height'].toDouble() : double.tryParse(data['height']?.toString() ?? ''),
       weight: data['weight'] is num ? data['weight'].toDouble() : double.tryParse(data['weight']?.toString() ?? ''),
@@ -182,6 +189,8 @@ class UserModel {
       'followerCount': followerCount,
       'challengeCount': challengeCount,
       
+      'certificate_url': certificateUrl,
+      'cv_url': cvUrl,
       'updatedAt': FieldValue.serverTimestamp(),
     };
   }
