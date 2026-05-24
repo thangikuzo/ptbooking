@@ -154,7 +154,7 @@ class _PTBookingManagementScreenState
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: const Text("Yêu cầu đặt lịch"),
-        backgroundColor: const Color(0xFF2E3B55),
+
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance

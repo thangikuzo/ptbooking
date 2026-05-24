@@ -33,9 +33,7 @@ class ChatListScreen extends StatelessWidget {
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Text("Tin nhắn", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-        backgroundColor: const Color(0xFF2E3B55),
-        elevation: 0,
-        centerTitle: true,
+
       ),
       body: Column(
         children: [

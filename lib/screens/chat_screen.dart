@@ -141,9 +141,6 @@ class _ChatScreenState extends State<ChatScreen> {
       backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
         title: const Text("Trò chuyện", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, letterSpacing: 0.5)),
-        backgroundColor: const Color(0xFF2E3B55),
-        elevation: 1,
-        centerTitle: true,
       ),
       body: Column(
         children: [

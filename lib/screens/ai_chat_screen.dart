@@ -121,9 +121,6 @@ class _AIChatScreenState extends State<AIChatScreen> {
             Text("Trợ lý AI", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           ],
         ),
-        backgroundColor: const Color(0xFF2E3B55),
-        elevation: 1,
-        centerTitle: true,
       ),
       body: Column(
         children: [

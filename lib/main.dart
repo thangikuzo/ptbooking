@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:ptbooking/screens/splash_screen.dart';
 import 'firebase_options.dart'; // File này vừa được tạo tự động
-import 'screens/login_screen.dart';
-import 'screens/challenge_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,7 +15,22 @@ void main() async {
       // scopes: ['email', 'profile'], // Nếu cần thêm scopes (mặc định đã có)
   );
   runApp(MaterialApp(
-    home: LoginScreen(), // Bay thẳng vào màn hình Thử thách!
-    debugShowCheckedModeBanner: false, // Tiện tay tắt luôn cái chữ DEBUG đỏ chót ở góc cho màn hình nó sạch
+    home: const SplashScreen(), // Đổi sang SplashScreen để check login tự động luôn sếp nhé
+    debugShowCheckedModeBanner: false,
+
+    // 🔥 THÊM ĐOẠN THEME NÀY VÀO ĐỂ QUẢN LÝ APPBAR TOÀN HỆ THỐNG
+    theme: ThemeData(
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.white, // Ép nền AppBar tất cả các màn hình thành màu trắng
+        elevation: 0.5,                // Độ nổi bóng đổ nhẹ nhàng, hiện đại
+        centerTitle: true,             // Tất cả tiêu đề tự động căn giữa
+        iconTheme: IconThemeData(color: Color(0xFF2E3B55)), // Icon điều hướng (nút back, menu) màu tối rõ ràng
+        titleTextStyle: TextStyle(
+          color: Color(0xFF2E3B55),    // Chữ tiêu đề màu tối cực kỳ dễ đọc
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ),
   ));
 }
