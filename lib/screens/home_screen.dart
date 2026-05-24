@@ -16,6 +16,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // 🔥 TRẠNG THÁI LỌC CHUYÊN MÔN (Mặc định hiển thị Tất cả)
   String _selectedCategory = 'Tất cả';
+  String _searchText = '';
 
   String get _userName {
     if (_currentUser?.displayName != null && _currentUser!.displayName!.isNotEmpty) {
@@ -26,12 +27,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // 🔥 MẢNG DANH MỤC ĐỂ ĐỔ UI VÀ BẮT SỰ KIỆN LỌC
   final List<Map<String, dynamic>> _categories = [
-    {'name': 'Tất cả', 'icon': Icons.grid_view_rounded},
-    {'name': 'Gym', 'icon': Icons.fitness_center},
-    {'name': 'Yoga', 'icon': Icons.self_improvement},
-    {'name': 'Boxing', 'icon': Icons.sports_mma},
-    {'name': 'Pilates', 'icon': Icons.accessibility_new},
-    {'name': 'Crossfit', 'icon': Icons.timer},
+    {'name': 'Tất cả', 'icon': Icons.grid_view_rounded, 'keywords': <String>[]},
+    {'name': 'Gym', 'icon': Icons.fitness_center, 'keywords': ['gym', 'tăng cơ', 'bodybuilding', 'strength']},
+    {'name': 'Giảm cân', 'icon': Icons.local_fire_department, 'keywords': ['giảm cân', 'fat loss', 'cardio', 'dinh dưỡng']},
+    {'name': 'Yoga', 'icon': Icons.self_improvement, 'keywords': ['yoga', 'stretching', 'thiền']},
+    {'name': 'Boxing', 'icon': Icons.sports_mma, 'keywords': ['boxing', 'kickboxing', 'mma']},
+    {'name': 'Pilates', 'icon': Icons.accessibility_new, 'keywords': ['pilates', 'core', 'phục hồi']},
+    {'name': 'Crossfit', 'icon': Icons.timer, 'keywords': ['crossfit', 'hiit', 'conditioning']},
   ];
 
   @override
@@ -129,6 +131,12 @@ class _HomeScreenState extends State<HomeScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: TextField(
+        textInputAction: TextInputAction.search,
+        onChanged: (value) {
+          setState(() {
+            _searchText = value;
+          });
+        },
         decoration: InputDecoration(
           hintText: "Tìm kiếm PT, bộ môn...",
           prefixIcon: const Icon(Icons.search, color: Colors.grey),
@@ -142,6 +150,51 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  String _normalizeText(String value) {
+    var result = value.toLowerCase();
+    const replacements = <String, List<String>>{
+      'a': ['à', 'á', 'ả', 'ã', 'ạ', 'ă', 'ằ', 'ắ', 'ẳ', 'ẵ', 'ặ', 'â', 'ầ', 'ấ', 'ẩ', 'ẫ', 'ậ'],
+      'e': ['è', 'é', 'ẻ', 'ẽ', 'ẹ', 'ê', 'ề', 'ế', 'ể', 'ễ', 'ệ'],
+      'i': ['ì', 'í', 'ỉ', 'ĩ', 'ị'],
+      'o': ['ò', 'ó', 'ỏ', 'õ', 'ọ', 'ô', 'ồ', 'ố', 'ổ', 'ỗ', 'ộ', 'ơ', 'ờ', 'ớ', 'ở', 'ỡ', 'ợ'],
+      'u': ['ù', 'ú', 'ủ', 'ũ', 'ụ', 'ư', 'ừ', 'ứ', 'ử', 'ữ', 'ự'],
+      'y': ['ỳ', 'ý', 'ỷ', 'ỹ', 'ỵ'],
+      'd': ['đ'],
+    };
+
+    replacements.forEach((replacement, chars) {
+      for (final char in chars) {
+        result = result.replaceAll(char, replacement);
+      }
+    });
+
+    return result;
+  }
+
+  List<UserModel> _filterPTs(List<UserModel> pts) {
+    final query = _normalizeText(_searchText.trim());
+    final selectedCategory = _categories.firstWhere(
+      (cat) => cat['name'] == _selectedCategory,
+      orElse: () => _categories.first,
+    );
+    final keywords = List<String>.from(selectedCategory['keywords'] as List);
+
+    return pts.where((pt) {
+      final searchableText = _normalizeText([
+        pt.name,
+        pt.specialty ?? '',
+        pt.bio ?? '',
+        pt.experience ?? '',
+      ].join(' '));
+
+      final matchesSearch = query.isEmpty || searchableText.contains(query);
+      final matchesCategory = keywords.isEmpty ||
+          keywords.any((keyword) => searchableText.contains(_normalizeText(keyword)));
+
+      return matchesSearch && matchesCategory;
+    }).toList();
   }
 
   Widget _buildUpcomingSession() {
@@ -323,18 +376,13 @@ class _HomeScreenState extends State<HomeScreen> {
           // 1. Ép kiểu dữ liệu sang List<UserModel>
           List<UserModel> pts = docs.map((doc) => UserModel.fromFirestore(doc)).toList();
 
-          // 2. 🔥 TIẾN HÀNH LỌC THEO CATEGORY ĐƯỢC CHỌN (Tìm kiếm chuỗi chứa từ khóa)
-          if (_selectedCategory != 'Tất cả') {
-            pts = pts.where((pt) {
-              final specialty = pt.specialty?.toLowerCase() ?? '';
-              return specialty.contains(_selectedCategory.toLowerCase());
-            }).toList();
-          }
+          // 2. Lọc theo category và nội dung search của học viên
+          pts = _filterPTs(pts);
 
           // Trường hợp lọc xong không có ông PT nào khớp
           if (pts.isEmpty) {
             return const Center(
-              child: Text("Không có HLV nào thuộc chuyên môn này.", style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey)),
+              child: Text("Không tìm thấy HLV phù hợp.", style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey)),
             );
           }
 

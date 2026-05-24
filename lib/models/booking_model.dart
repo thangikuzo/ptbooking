@@ -9,8 +9,12 @@ class BookingModel {
   final String bookingDate; // yyyy-MM-dd
   final String day;
   final String timeSlot;
+  final String packageName;
+  final int sessionCount;
+  final int paymentAmount;
   final String status;
-  final String paymentStatus; // <-- BỔ SUNG TRƯỜNG NÀY ĐỂ KHỚP VỚI DATA
+  final String paymentStatus;
+  final String? slotLockId;
   final DateTime? createdAt;
 
   BookingModel({
@@ -22,17 +26,19 @@ class BookingModel {
     required this.bookingDate,
     required this.day,
     required this.timeSlot,
+    this.packageName = '',
+    this.sessionCount = 1,
+    this.paymentAmount = 0,
     required this.status,
-    this.paymentStatus = 'unpaid', // Mặc định là chưa thanh toán
+    this.paymentStatus = 'unpaid',
+    this.slotLockId,
     this.createdAt,
   });
 
-  // Ép Map từ Firebase thành Object BookingModel an toàn tuyệt đối
   factory BookingModel.fromFirestore(DocumentSnapshot doc) {
-    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    final data = doc.data() as Map<String, dynamic>;
     return BookingModel(
       id: doc.id,
-      // Thêm ?.toString() để chống lỗi văng app khi Firebase trả về kiểu Số
       userId: data['user_id']?.toString() ?? '',
       userName: data['user_name']?.toString() ?? 'Ẩn danh',
       ptId: data['pt_id']?.toString() ?? '',
@@ -40,14 +46,21 @@ class BookingModel {
       bookingDate: data['booking_date']?.toString() ?? '',
       day: data['day']?.toString() ?? '',
       timeSlot: data['time_slot']?.toString() ?? '',
+      packageName: data['package_name']?.toString() ?? '',
+      sessionCount: data['session_count'] is int
+          ? data['session_count']
+          : int.tryParse(data['session_count']?.toString() ?? '') ?? 1,
+      paymentAmount: data['payment_amount'] is int
+          ? data['payment_amount']
+          : int.tryParse(data['payment_amount']?.toString() ?? '') ?? 0,
       status: data['status']?.toString() ?? 'pending',
-      paymentStatus: data['payment_status']?.toString() ?? 'unpaid', // <-- ĐỌC DATA MỚI
+      paymentStatus: data['payment_status']?.toString() ?? 'unpaid',
+      slotLockId: data['slot_lock_id']?.toString(),
       createdAt: data['created_at'] != null ? (data['created_at'] as Timestamp).toDate() : null,
     );
   }
 
-  // Ép Object thành Map để đẩy lên Firebase
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toMap({String? slotLockIdOverride}) {
     return {
       'user_id': userId,
       'user_name': userName,
@@ -56,8 +69,12 @@ class BookingModel {
       'booking_date': bookingDate,
       'day': day,
       'time_slot': timeSlot,
+      'package_name': packageName,
+      'session_count': sessionCount,
+      'payment_amount': paymentAmount,
       'status': status,
-      'payment_status': paymentStatus, // <-- LƯU DATA MỚI
+      'payment_status': paymentStatus,
+      'slot_lock_id': slotLockIdOverride ?? slotLockId,
       'created_at': FieldValue.serverTimestamp(),
     };
   }
