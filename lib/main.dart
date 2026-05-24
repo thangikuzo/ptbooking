@@ -5,12 +5,17 @@ import 'firebase_options.dart'; // File này vừa được tạo tự động
 import 'screens/login_screen.dart';
 import 'screens/challenge_screen.dart';
 
+import 'services/notification_service.dart'; // Thêm import này
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
-
   );
+  
+  // Khởi tạo Notification Service
+  await NotificationService().init();
+
   await GoogleSignIn.instance.initialize(
       serverClientId: "501388421930-610ost62oop0k4vu1p6pgigh1ej0s65p.apps.googleusercontent.com",  // Web Client ID của bạn
       // scopes: ['email', 'profile'], // Nếu cần thêm scopes (mặc định đã có)

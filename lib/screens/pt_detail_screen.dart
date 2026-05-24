@@ -203,6 +203,14 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
                       Text("Chuyên môn: $specialty", style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 4),
                       Text("Kinh nghiệm: $experience năm", style: const TextStyle(color: Colors.grey)),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(Icons.people, color: Colors.blue, size: 16),
+                          const SizedBox(width: 4),
+                          Text("${widget.ptData['followerCount'] ?? 0} người theo dõi", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
+                        ],
+                      ),
                     ],
                   ),
                 )

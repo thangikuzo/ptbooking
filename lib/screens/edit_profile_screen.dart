@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import 'splash_screen.dart';
+import 'inventory_screen.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -34,6 +35,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String _selectedGender = 'Nam';
   String? _userRole;
   String? _avatarUrl;
+  String? _selectedFrame;
   File? _imageFile;
   bool _isLoading = false;
   bool _isFetching = true;
@@ -62,6 +64,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         _selectedGender = user.gender ?? 'Nam';
         _userRole = user.role;
         _avatarUrl = user.avatar;
+        _selectedFrame = user.selectedFrame;
         _isFetching = false;
       });
     }
@@ -208,30 +211,63 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Widget _buildAvatarSection() {
-    return GestureDetector(
-      onTap: _pickImage,
-      child: Stack(
-        alignment: Alignment.bottomRight,
-        children: [
-          CircleAvatar(
-            radius: 50,
-            backgroundColor: Colors.grey[200],
-            backgroundImage: _imageFile != null
-                ? FileImage(_imageFile!) as ImageProvider
-                : (_avatarUrl != null && _avatarUrl!.isNotEmpty)
-                ? NetworkImage(_avatarUrl!)
-                : null,
-            child: (_imageFile == null && (_avatarUrl == null || _avatarUrl!.isEmpty))
-                ? const Icon(Icons.person, size: 50, color: Colors.grey)
-                : null,
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: _pickImage,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Avatar Image
+              Container(
+                margin: const EdgeInsets.all(16),
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundColor: Colors.grey[200],
+                  backgroundImage: _imageFile != null
+                      ? FileImage(_imageFile!) as ImageProvider
+                      : (_avatarUrl != null && _avatarUrl!.isNotEmpty)
+                          ? NetworkImage(_avatarUrl!)
+                          : null,
+                  child: (_imageFile == null && (_avatarUrl == null || _avatarUrl!.isEmpty))
+                      ? const Icon(Icons.person, size: 50, color: Colors.grey)
+                      : null,
+                ),
+              ),
+              // Frame Avatar (Khung viền bao quanh)
+                if (_selectedFrame != null && _selectedFrame!.isNotEmpty)
+                  SizedBox(
+                    width: 140,
+                    height: 140,
+                    child: Image.asset(
+                      _selectedFrame!.replaceAll('.jpg', '.png'),
+                      fit: BoxFit.contain,
+                      errorBuilder: (c, e, s) => const SizedBox.shrink(),
+                    ),
+                  ),
+              // Camera Icon Overlay
+              Positioned(
+                bottom: 12,
+                right: 12,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(color: Color(0xFFFCA311), shape: BoxShape.circle),
+                  child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                ),
+              ),
+            ],
           ),
-          Container(
-              padding: const EdgeInsets.all(8),
-              decoration: const BoxDecoration(color: Color(0xFFFCA311), shape: BoxShape.circle),
-              child: const Icon(Icons.camera_alt, color: Colors.white, size: 20)
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 12),
+        TextButton.icon(
+          onPressed: () async {
+            await Navigator.push(context, MaterialPageRoute(builder: (context) => const InventoryScreen()));
+            _loadCurrentData(); // Reload data when returning
+          },
+          icon: const Icon(Icons.shopping_bag, color: Colors.green),
+          label: const Text("Túi Đồ (Đổi khung Avatar)", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+        ),
+      ],
     );
   }
 

@@ -20,6 +20,39 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final User? _currentUser = FirebaseAuth.instance.currentUser;
+  String? _myChatFrame;
+  String? _partnerChatFrame;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadChatFrames();
+  }
+
+  Future<void> _loadChatFrames() async {
+    if (_currentUser == null) return;
+    try {
+      var chatDoc = await FirebaseFirestore.instance.collection('chats').doc(widget.chatId).get();
+      if (!chatDoc.exists) return;
+      var data = chatDoc.data()!;
+      String ptId = data['pt_id'] ?? '';
+      String customerId = data['customer_id'] ?? '';
+      
+      String partnerId = (_currentUser!.uid == ptId) ? customerId : ptId;
+
+      var myDoc = await FirebaseFirestore.instance.collection('users').doc(_currentUser!.uid).get();
+      var partnerDoc = await FirebaseFirestore.instance.collection('users').doc(partnerId).get();
+
+      if (mounted) {
+        setState(() {
+          _myChatFrame = myDoc.data()?['selectedChatFrame'];
+          _partnerChatFrame = partnerDoc.data()?['selectedChatFrame'];
+        });
+      }
+    } catch (e) {
+      debugPrint("Lỗi tải khung chat: $e");
+    }
+  }
 
   // 🔥 UPDATE LOGIC: Gửi tin nhắn và cập nhật người gửi cuối cùng
   Future<void> _sendMessage() async {
@@ -175,33 +208,43 @@ class _ChatScreenState extends State<ChatScreen> {
                         child: Column(
                           crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                           children: [
+                            // Khung chat
                             Container(
                               constraints: BoxConstraints(
                                 maxWidth: MediaQuery.of(context).size.width * 0.75,
                               ),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: (isMe ? _myChatFrame : _partnerChatFrame) != null ? 36 : 16, 
+                                vertical: (isMe ? _myChatFrame : _partnerChatFrame) != null ? 24 : 12
+                              ),
                               decoration: BoxDecoration(
-                                color: isMe ? const Color(0xFFFCA311) : Colors.white,
-                                // ĐUÔI NHỌN THẨM MỸ CAO CHO KHUNG CHAT
-                                borderRadius: BorderRadius.only(
-                                  topLeft: const Radius.circular(16),
-                                  topRight: const Radius.circular(16),
-                                  bottomLeft: isMe ? const Radius.circular(16) : const Radius.circular(4),
-                                  bottomRight: isMe ? const Radius.circular(4) : const Radius.circular(16),
-                                ),
+                                color: (isMe ? _myChatFrame : _partnerChatFrame) != null 
+                                  ? Colors.transparent // Nếu có khung thì trong suốt nền
+                                  : (isMe ? const Color(0xFFFCA311) : Colors.white),
+                                image: (isMe ? _myChatFrame : _partnerChatFrame) != null
+                                  ? DecorationImage(
+                                      image: AssetImage((isMe ? _myChatFrame : _partnerChatFrame)!.replaceAll('.jpg', '.png')),
+                                      fit: BoxFit.fill,
+                                    )
+                                  : null,
+                                borderRadius: (isMe ? _myChatFrame : _partnerChatFrame) != null 
+                                  ? null 
+                                  : BorderRadius.only(
+                                      topLeft: const Radius.circular(16),
+                                      topRight: const Radius.circular(16),
+                                      bottomLeft: isMe ? const Radius.circular(16) : const Radius.circular(4),
+                                      bottomRight: isMe ? const Radius.circular(4) : const Radius.circular(16),
+                                    ),
                                 boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.04),
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 2),
-                                  ),
+                                  if ((isMe ? _myChatFrame : _partnerChatFrame) == null)
+                                    BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 2)),
                                 ],
                               ),
                               child: Text(
                                 message.text,
                                 style: TextStyle(
                                   fontSize: 15,
-                                  color: isMe ? Colors.white : const Color(0xFF1E2937),
+                                  color: (isMe && _myChatFrame == null) ? Colors.white : const Color(0xFF1E2937),
                                   height: 1.35,
                                 ),
                               ),
