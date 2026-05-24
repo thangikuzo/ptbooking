@@ -19,6 +19,8 @@ class UserModel {
   final String? specialty;
   final String? experience;
   final String? bio;
+  final String? certificateUrl; // 🔥 BỔ SUNG TRƯỜNG CHỨNG CHỈ
+  final String? cvUrl;          // 🔥 BỔ SUNG TRƯỜNG CV
 
   UserModel({
     required this.uid,
@@ -35,7 +37,8 @@ class UserModel {
     this.specialty,
     this.experience,
     this.bio,
-
+    this.certificateUrl,
+    this.cvUrl,
   });
 
   // Ép kiểu từ dữ liệu Firebase về Object UserModel an toàn
@@ -48,15 +51,15 @@ class UserModel {
       avatar: data['avatar']?.toString(),
       role: data['role']?.toString() ?? 'User',
 
-      // Thêm ?.toString() vào để chống lỗi hiện chữ "null"
       phone: data['phone']?.toString(),
       gender: data['gender']?.toString(),
-      address: data['address']?.toString(), // Đã bổ sung address bị thiếu
+      address: data['address']?.toString(),
       specialty: data['specialty']?.toString(),
       experience: data['experience']?.toString(),
       bio: data['bio']?.toString(),
+      certificateUrl: data['certificate_url']?.toString(), // 🔥 ĐỌC LINK CHỨNG CHỈ
+      cvUrl: data['cv_url']?.toString(),                   // 🔥 ĐỌC LINK CV
 
-      // Xử lý bọc thép cho các trường Số (int, double)
       age: data['age'] is int ? data['age'] : int.tryParse(data['age']?.toString() ?? ''),
       height: data['height'] is num ? data['height'].toDouble() : double.tryParse(data['height']?.toString() ?? ''),
       weight: data['weight'] is num ? data['weight'].toDouble() : double.tryParse(data['weight']?.toString() ?? ''),
@@ -68,7 +71,6 @@ class UserModel {
       'uid': uid,
       'email': email,
       'name': name,
-
       'avatar': avatar,
       'role': role,
       'phone': phone,
@@ -80,6 +82,8 @@ class UserModel {
       'specialty': specialty,
       'experience': experience,
       'bio': bio,
+      'certificate_url': certificateUrl,
+      'cv_url': cvUrl,
       'updatedAt': FieldValue.serverTimestamp(),
     };
   }
