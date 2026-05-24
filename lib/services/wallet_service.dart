@@ -16,11 +16,15 @@ class WalletService {
   }
 
   Future<void> ensureWallet(String userId) async {
-    await _firestore.collection('wallets').doc(userId).set({
-      'balance': 0,
-      'held_balance': 0,
-      'updated_at': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    final walletRef = _firestore.collection('wallets').doc(userId);
+    final doc = await walletRef.get();
+    if (!doc.exists) {
+      await walletRef.set({
+        'balance': 0,
+        'held_balance': 0,
+        'updated_at': FieldValue.serverTimestamp(),
+      });
+    }
   }
 
   Future<void> requestDeposit({required String userId, required String userName, required int amount}) async {
@@ -29,13 +33,26 @@ class WalletService {
     }
 
     await ensureWallet(userId);
-    await _firestore.collection('wallet_transactions').add({
-      'user_id': userId,
-      'user_name': userName,
-      'type': 'deposit',
-      'amount': amount,
-      'status': 'pending',
-      'created_at': FieldValue.serverTimestamp(),
+    
+    final transactionRef = _firestore.collection('wallet_transactions').doc();
+    final walletRef = _firestore.collection('wallets').doc(userId);
+
+    await _firestore.runTransaction((transaction) async {
+      transaction.set(transactionRef, {
+        'user_id': userId,
+        'user_name': userName,
+        'type': 'deposit',
+        'amount': amount,
+        'status': 'confirmed',
+        'created_at': FieldValue.serverTimestamp(),
+        'confirmed_at': FieldValue.serverTimestamp(),
+      });
+
+      transaction.set(walletRef, {
+        'balance': FieldValue.increment(amount),
+        'held_balance': FieldValue.increment(0),
+        'updated_at': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
     });
   }
 

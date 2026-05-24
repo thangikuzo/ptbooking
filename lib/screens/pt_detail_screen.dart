@@ -5,6 +5,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/booking_model.dart';
 import '../models/review_model.dart'; // 🔥 KÉO FILE MODEL MỚI VÀO
 import '../services/booking_service.dart';
+import '../services/wallet_service.dart';
+
+
 
 class PTDetailScreen extends StatefulWidget {
   final String ptUid;
@@ -18,8 +21,18 @@ class PTDetailScreen extends StatefulWidget {
 
 class _PTDetailScreenState extends State<PTDetailScreen> {
   final BookingService _bookingService = BookingService();
+  final WalletService _walletService = WalletService();
   bool _isBooking = false;
   bool _isLoadingSlots = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _walletService.ensureWallet(user.uid);
+    }
+  }
 
   DateTime? _selectedDate;
   String? _selectedDay;
@@ -521,7 +534,26 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
           "Trainer Profile",
           style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 18),
         ),
-        actions: [IconButton(onPressed: () {}, icon: const Icon(Icons.favorite_border))],
+        actions: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+              stream: _walletService.watchWallet(FirebaseAuth.instance.currentUser?.uid ?? ''),
+              builder: (context, snapshot) {
+                final data = snapshot.data?.data() ?? {};
+                final raw = data['balance'] ?? 0;
+                final balance = raw is int
+                    ? raw
+                    : raw is double
+                        ? raw.toInt()
+                        : int.tryParse(raw.toString()) ?? 0;
+                final formatted = '${balance.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (m) => '.')}đ';
+                return Text('Số dư: $formatted', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white));
+              },
+            ),
+          ),
+          IconButton(onPressed: () {}, icon: const Icon(Icons.favorite_border)),
+        ],
       ),
       extendBodyBehindAppBar: true,
 

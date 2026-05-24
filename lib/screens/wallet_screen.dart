@@ -52,19 +52,237 @@ class _WalletScreenState extends State<WalletScreen> {
       return;
     }
 
+    _showMockPaymentSheet(
+      context: context,
+      amount: amount,
+      userId: user.uid,
+      userName: user.displayName ?? user.email ?? 'Học viên',
+    );
+  }
+
+  void _showMockPaymentSheet({
+    required BuildContext context,
+    required int amount,
+    required String userId,
+    required String userName,
+  }) {
+    final qrUrl = 'https://img.vietqr.io/image/MB-1234567890-compact.png?'
+        'amount=$amount'
+        '&addInfo=NAPPTB_${userId.substring(0, 6).toUpperCase()}'
+        '&accountName=PT%20BOOKING%20DEMO';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext ctx) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const Text(
+                  'Quét mã VietQR chuyển khoản',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF18253E),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Sử dụng bất kỳ app ngân hàng nào để quét mã dưới đây',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 13, color: Colors.grey),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: Image.network(
+                    qrUrl,
+                    width: 200,
+                    height: 200,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 200,
+                        height: 200,
+                        color: Colors.grey.shade100,
+                        child: const Center(
+                          child: Text(
+                            'Lỗi tải mã QR.\nVui lòng chuyển khoản thủ công.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8F9FA),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      _buildInfoRow('Ngân hàng', 'MB Bank (Ngân hàng Quân Đội)'),
+                      const Divider(),
+                      _buildInfoRow('Số tài khoản', '1234567890'),
+                      const Divider(),
+                      _buildInfoRow('Tên tài khoản', 'PT BOOKING DEMO'),
+                      const Divider(),
+                      _buildInfoRow('Số tiền', _formatCurrency(amount)),
+                      const Divider(),
+                      _buildInfoRow(
+                        'Nội dung CK',
+                        'NAPPTB_${userId.substring(0, 6).toUpperCase()}',
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('Hủy'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFFA515),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          _processDepositDemo(amount, userId, userName);
+                        },
+                        child: const Text('Tôi đã chuyển tiền'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF18253E),
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _processDepositDemo(int amount, String userId, String userName) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext ctx) {
+        return const PopScope(
+          canPop: false,
+          child: AlertDialog(
+            content: Row(
+              children: [
+                CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFA515))),
+                SizedBox(width: 20),
+                Expanded(
+                  child: Text(
+                    "Đang quét giao dịch ngân hàng...\nVui lòng chờ trong giây lát.",
+                    style: TextStyle(fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    await Future.delayed(const Duration(milliseconds: 2500));
+
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+
     setState(() => _isSubmitting = true);
 
     try {
       await _walletService.requestDeposit(
-        userId: user.uid,
-        userName: user.displayName ?? user.email ?? 'Học viên',
+        userId: userId,
+        userName: userName,
         amount: amount,
       );
       _amountController.clear();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Đã gửi yêu cầu nạp ví. Vui lòng chờ admin xác nhận.'),
+            content: Text('Nạp tiền vào ví thành công! Số dư đã được cập nhật.'),
             backgroundColor: Colors.green,
           ),
         );

@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'splash_screen.dart';
+import 'package:ptbooking/services/wallet_service.dart';
 
 class PTRegistrationScreen extends StatefulWidget {
   const PTRegistrationScreen({super.key});
@@ -15,6 +16,7 @@ class PTRegistrationScreen extends StatefulWidget {
 }
 
 class _PTRegistrationScreenState extends State<PTRegistrationScreen> {
+  final WalletService _walletService = WalletService();
   final _formKey = GlobalKey<FormState>();
   final _experienceController = TextEditingController();
   final _specialtyController = TextEditingController();
@@ -23,6 +25,15 @@ class _PTRegistrationScreenState extends State<PTRegistrationScreen> {
   File? _cvImage;
   File? _certImage;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _walletService.ensureWallet(user.uid);
+    }
+  }
 
   Future<void> _pickImage(String type) async {
     final picker = ImagePicker();
@@ -103,13 +114,51 @@ class _PTRegistrationScreenState extends State<PTRegistrationScreen> {
     setState(() => _isLoading = false);
   }
 
-  @override
+    // Hiển thị số dư ví hiện có
+  Widget _buildBalance() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return const SizedBox();
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: _walletService.watchWallet(user.uid),
+      builder: (context, snapshot) {
+        final data = snapshot.data?.data() ?? {};
+        final balance = (data['balance'] ?? 0) as int;
+        final formatted = '${balance.toString().replaceAllMapped(RegExp(r'\\B(?=(\\d{3})+(?!\\d))'), (m) => '.')}đ';
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Text('Số dư hiện có: $formatted',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF2E3B55))),
+        );
+      },
+    );
+  }
+
+@override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white, // Cập nhật nền trắng
       appBar: AppBar(
         title: const Text("Đăng ký làm PT"),
-        // Đã xóa backgroundColor để ăn theo Theme trắng của main.dart
+        actions: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+              stream: _walletService.watchWallet(FirebaseAuth.instance.currentUser?.uid ?? ''),
+              builder: (context, snapshot) {
+                final data = snapshot.data?.data() ?? {};
+                final raw = data['balance'] ?? 0;
+                final balance = raw is int
+                    ? raw
+                    : raw is double
+                        ? raw.toInt()
+                        : int.tryParse(raw.toString()) ?? 0;
+                final formatted = '${balance.toString().replaceAllMapped(RegExp(r'\\B(?=(\\d{3})+(?!\\d))'), (m) => '.')}đ';
+                return Text('Số dư: $formatted', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white));
+              },
+            ),
+          ),
+        ],
+        backgroundColor: Theme.of(context).primaryColor,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24), // Tăng padding lên 24 cho thoáng
@@ -119,7 +168,8 @@ class _PTRegistrationScreenState extends State<PTRegistrationScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Text("Điền thông tin chuyên môn", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF2E3B55))),
-              const SizedBox(height: 10),
+              _buildBalance(),
+                const SizedBox(height: 10),
               const Text("Hồ sơ của bạn sẽ được Admin xét duyệt trước khi bạn có thể bắt đầu nhận học viên.", style: TextStyle(color: Colors.grey)),
               const SizedBox(height: 30),
 
