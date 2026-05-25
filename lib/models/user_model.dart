@@ -141,9 +141,6 @@ class UserModel {
       rating: (data['rating'] as num?)?.toDouble() ?? 0.0,
       followerCount: data['followerCount'] as int? ?? 0,
       challengeCount: data['challengeCount'] as int? ?? 0,
-      specialty: data['specialty']?.toString(),
-      experience: data['experience']?.toString(),
-      bio: data['bio']?.toString(),
       certificateUrl: data['certificate_url']?.toString(), // 🔥 ĐỌC LINK CHỨNG CHỈ
       cvUrl: data['cv_url']?.toString(),                   // 🔥 ĐỌC LINK CV
 

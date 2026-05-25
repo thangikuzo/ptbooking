@@ -42,10 +42,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final Color primaryColor = const Color(0xFF2E3B55);
-    final Color accentColor = const Color(0xFFFCA311);
   final User? _currentUser = FirebaseAuth.instance.currentUser;
 
   // 🔥 TRẠNG THÁI LỌC CHUYÊN MÔN (Mặc định hiển thị Tất cả)

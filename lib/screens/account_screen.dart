@@ -50,25 +50,6 @@ class _AccountScreenState extends State<AccountScreen> {
         if (!doc.exists) {
           return const Scaffold(body: Center(child: Text("Không tìm thấy dữ liệu")));
         }
-  Future<void> _fetchUserData() async {
-    UserModel? user = await _authService.getUserData();
-
-    setState(() {
-      _userModel = user;
-      _isLoading = false;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-
         _userModel = UserModel.fromFirestore(doc);
 
         String roleDisplay = "Khách hàng";
@@ -88,206 +69,76 @@ class _AccountScreenState extends State<AccountScreen> {
             child: Column(
               children: [
                 _buildHeader(roleDisplay, roleColor),
-                const SizedBox(height: 10),
-    if (_userModel?.role == "PT") {
-      roleDisplay = "Huấn luyện viên (PT)";
-      roleColor = const Color(0xFFFCA311);
-    } else if (_userModel?.role == "Admin") {
-      roleDisplay = "Quản trị viên";
-      roleColor = Colors.redAccent;
-    }
-
-    return Scaffold(
-      backgroundColor: const Color(0xFFF6F7FB),
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(
-              roleDisplay,
-              roleColor,
+                const SizedBox(height: 18),
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    children: [
+                      if (_userModel?.role == 'user') ...[
+                        _buildLoginStreak(),
+                        const SizedBox(height: 16),
+                      ],
+                      _buildMenuItem(Icons.person_outline, "Chỉnh sửa hồ sơ", () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen()));
+                      }),
+                      if (_userModel?.role == 'user') ...[
+                        _buildMenuItem(Icons.card_giftcard, "Phần thưởng cấp độ", () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const LevelRewardsScreen()));
+                        }),
+                        _buildMenuItem(Icons.star, "Thẻ Battle Pass", () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const BattlePassScreen()));
+                        }),
+                        _buildMenuItem(Icons.workspace_premium, "Bảng Thành Tích", () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const AchievementScreen()));
+                        }),
+                        _buildMenuItem(Icons.inventory_2, "Kho Đồ (Khung & Avatar)", () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const InventoryScreen()));
+                        }),
+                        _buildMenuItem(Icons.bar_chart, "Tiến độ của tôi", () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const MyProgressScreen()));
+                        }),
+                        _buildMenuItem(Icons.sports_gymnastics, "Đăng ký trở thành PT", () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const PTRegistrationScreen()));
+                        }),
+                      ],
+                      if (_userModel?.role == 'PT') ...[
+                        _buildMenuItem(Icons.schedule, "Cài đặt giờ làm việc", () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const PTScheduleScreen()));
+                        }),
+                        _buildMenuItem(Icons.insights, "Đánh giá tiến độ học viên", () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentProgressScreen()));
+                        }),
+                      ],
+                      const SizedBox(height: 10),
+                      const Divider(),
+                      const SizedBox(height: 10),
+                      _buildMenuItem(Icons.developer_mode, "Developer Tools (Test)", () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const DevToolScreen()));
+                      }),
+                      const SizedBox(height: 10),
+                      _buildMenuItem(Icons.logout, "Đăng xuất", () async {
+                        await _authService.logout();
+                        if (mounted) {
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(builder: (_) => const LoginScreen()),
+                                (route) => false,
+                          );
+                        }
+                      }, isDestructive: true),
+                    ],
+                  ),
+                )
+              ],
             ),
-            const SizedBox(height: 18),
-
-            Expanded(
-              child: ListView(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  if (_userModel?.role == 'user') ...[
-                    _buildLoginStreak(),
-                    const SizedBox(height: 16),
-                  ],
-                  _buildMenuItem(Icons.person_outline, "Chỉnh sửa hồ sơ", () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const EditProfileScreen(),
-                      ),
-                    );
-                  }),
-
-                  if (_userModel?.role == 'user') ...[
-                    _buildMenuItem(Icons.card_giftcard, "Phần thưởng cấp độ", () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const LevelRewardsScreen(),
-                        ),
-                      );
-                    }),
-                    
-                    _buildMenuItem(Icons.star, "Thẻ Battle Pass", () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const BattlePassScreen(),
-                        ),
-                      );
-                    }),
-                    
-                    _buildMenuItem(Icons.workspace_premium, "Bảng Thành Tích", () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const AchievementScreen(),
-                        ),
-                      );
-                    }),
-
-                    _buildMenuItem(Icons.inventory_2, "Kho Đồ (Khung & Avatar)", () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const InventoryScreen(),
-                        ),
-                      );
-                    }),
-                  ],
-
-                  if (_userModel?.role == 'user')
-                    _buildMenuItem(Icons.bar_chart, "Tiến độ của tôi", () {
-
-                  _buildMenuItem(
-                    Icons.person_outline,
-                    "Chỉnh sửa hồ sơ",
-                        () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                          const EditProfileScreen(),
-                        ),
-                      );
-                    },
-                  ),
-
-                  if (_userModel?.role == "user")
-                    _buildMenuItem(
-                      Icons.bar_chart,
-                      "Tiến độ của tôi",
-                          () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                            const MyProgressScreen(),
-                          ),
-                        );
-                      },
-                    ),
-
-                  if (_userModel?.role == "user")
-                    _buildMenuItem(
-                      Icons.sports_gymnastics,
-                      "Đăng ký trở thành PT",
-                          () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                            const PTRegistrationScreen(),
-                          ),
-                        );
-                      },
-                    ),
-
-                  if (_userModel?.role == "PT")
-                    _buildMenuItem(
-                      Icons.schedule,
-                      "Cài đặt giờ làm việc",
-                          () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                            const PTScheduleScreen(),
-                          ),
-                        );
-                      },
-                    ),
-
-                  if (_userModel?.role == "PT")
-                    _buildMenuItem(
-                      Icons.insights,
-                      "Đánh giá tiến độ học viên",
-                          () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                            const StudentProgressScreen(),
-                          ),
-                        );
-                      },
-                    ),
-
-                  const SizedBox(height: 10),
-                  const Divider(),
-                  const SizedBox(height: 10),
-                  
-                  _buildMenuItem(Icons.developer_mode, "Developer Tools (Test)", () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const DevToolScreen(),
-                      ),
-                    );
-                  }),
-                  const SizedBox(height: 10),
-
-                  _buildMenuItem(
-                    Icons.logout,
-                    "Đăng xuất",
-                        () async {
-                      await _authService.logout();
-
-                      if (mounted) {
-                        Navigator.of(context)
-                            .pushAndRemoveUntil(
-                          MaterialPageRoute(
-                            builder: (_) =>
-                            const LoginScreen(),
-                          ),
-                              (route) => false,
-                        );
-                      }
-                    },
-                    isDestructive: true,
-                  ),
-                ],
-              ),
-            )
-          ],
-        ),
-      ),
-    );
+          ),
+        );
       },
     );
   }
 
   Widget _buildLoginStreak() {
     int streak = _userModel?.loginStreak ?? 0;
-    
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
@@ -317,7 +168,7 @@ class _AccountScreenState extends State<AccountScreen> {
               bool isActive = day <= streak;
               bool isToday = day == streak;
               bool isRewardDay = day == 7;
-              
+
               // Animated lửa
               return Column(
                 children: [
@@ -337,7 +188,7 @@ class _AccountScreenState extends State<AccountScreen> {
                         );
                       },
                       onEnd: () {
-                        // Trick để lặp animation vô tận (hoặc dùng provider/state) - tạm thời TweenAnimationBuilder sẽ chạy 1 lần. 
+                        // Trick để lặp animation vô tận (hoặc dùng provider/state) - tạm thời TweenAnimationBuilder sẽ chạy 1 lần.
                         // Để lửa động liên tục cần AnimationController, nhưng dùng pulse CSS-like đơn giản.
                       },
                     )
@@ -349,12 +200,12 @@ class _AccountScreenState extends State<AccountScreen> {
                     ),
                   const SizedBox(height: 8),
                   Text(
-                    "T${day + 1 == 8 ? "CN" : day + 1}", 
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                      color: isActive ? Colors.orange.shade800 : Colors.grey,
-                    )
+                      "T${day + 1 == 8 ? "CN" : day + 1}",
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                        color: isActive ? Colors.orange.shade800 : Colors.grey,
+                      )
                   ),
                 ],
               );
@@ -372,27 +223,27 @@ class _AccountScreenState extends State<AccountScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF4CAF50), Color(0xFF81C784)], // Xanh lá - Trắng nhẹ
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(28),
-          bottomRight: Radius.circular(28),
-        ),
-        boxShadow: [
-          BoxShadow(color: Colors.black26, offset: Offset(0, 4), blurRadius: 8),
-        ]
+          gradient: LinearGradient(
+            colors: [Color(0xFF4CAF50), Color(0xFF81C784)], // Xanh lá - Trắng nhẹ
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(28),
+            bottomRight: Radius.circular(28),
+          ),
+          boxShadow: [
+            BoxShadow(color: Colors.black26, offset: Offset(0, 4), blurRadius: 8),
+          ]
       ),
       child: Column(
         children: [
           Container(
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.2), spreadRadius: 2, blurRadius: 8)
-              ]
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.2), spreadRadius: 2, blurRadius: 8)
+                ]
             ),
             child: SizedBox(
               width: 115,
@@ -423,40 +274,16 @@ class _AccountScreenState extends State<AccountScreen> {
                 ],
               ),
             ),
-          CircleAvatar(
-            radius: 42,
-            backgroundColor: Colors.white24,
-            backgroundImage:
-            (_userModel?.avatar != null &&
-                _userModel!.avatar!.isNotEmpty)
-                ? NetworkImage(
-              _userModel!.avatar!,
-            )
-                : null,
-            child:
-            (_userModel?.avatar == null ||
-                _userModel!
-                    .avatar!.isEmpty)
-                ? const Icon(
-              Icons.person,
-              size: 45,
-              color: Colors.white,
-            )
-                : null,
           ),
-
           const SizedBox(height: 14),
 
           Text(
-            _userModel?.name ??
-                "Người dùng",
+            _userModel?.name ?? "Người dùng",
             style: const TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              shadows: [Shadow(color: Colors.black26, offset: Offset(1, 1), blurRadius: 2)]
-              fontWeight:
-              FontWeight.bold,
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                shadows: [Shadow(color: Colors.black26, offset: Offset(1, 1), blurRadius: 2)]
             ),
           ),
 
@@ -465,14 +292,10 @@ class _AccountScreenState extends State<AccountScreen> {
           Text(
             _userModel?.email ?? "",
             style: const TextStyle(color: Colors.white, fontSize: 13),
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 13,
-            ),
           ),
 
           const SizedBox(height: 12),
-          if (_userModel?.role == 'User')
+          if (_userModel?.role == 'user')
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -509,38 +332,6 @@ class _AccountScreenState extends State<AccountScreen> {
         color: bgColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
-
-          _buildRoleBadge(
-            roleDisplay,
-            roleColor,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRoleBadge(
-      String text,
-      Color color) {
-    return Container(
-      padding:
-      const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 5,
-      ),
-      decoration: BoxDecoration(
-        color: color.withOpacity(
-          0.15,
-        ),
-        borderRadius:
-        BorderRadius.circular(
-          20,
-        ),
-        border: Border.all(
-          color: color.withOpacity(
-            0.4,
-          ),
-        ),
       ),
       child: Text(
         text,
@@ -548,14 +339,10 @@ class _AccountScreenState extends State<AccountScreen> {
           fontSize: 12,
           fontWeight: FontWeight.bold,
           color: textColor,
-          fontWeight:
-          FontWeight.bold,
-          color: color,
         ),
       ),
     );
   }
-
 
   Widget _buildMenuItem(
       IconData icon,
