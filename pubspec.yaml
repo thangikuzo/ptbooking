@@ -46,13 +46,13 @@ dependencies:
   timezone: ^0.11.0
   shared_preferences: ^2.5.5
   url_launcher: ^6.2.0
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   shimmer: ^3.0.0
   webview_flutter: ^4.9.0
-  qr_flutter: ^4.1.0
   animate_do: ^3.3.4
   cached_network_image: ^3.3.1
   # The "flutter_lints" package below contains a set of recommended lints to
@@ -73,12 +73,10 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
-     - lib/services/momo.jpg
-
-
-      - assets/frame_avatar/
-      - assets/frame_chat/
-      - assets/badges/
+    - lib/services/momo.jpg
+    - assets/frame_avatar/
+    - assets/frame_chat/
+    - assets/badges/
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

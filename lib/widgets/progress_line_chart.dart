@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-
 class ProgressLineChart extends StatelessWidget {
   final List<Map<String, dynamic>> data; // each entry should contain 'total_score' and optionally 'week'
   const ProgressLineChart({Key? key, required this.data}) : super(key: key);
@@ -20,10 +19,7 @@ class ProgressLineChart extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
       ),
-      child: CustomPaint(
-        painter: _LineChartPainter(data),
-        child: const SizedBox.expand(),
-      ),
+      child: CustomPaint(painter: _LineChartPainter(data), child: const SizedBox.expand()),
     );
   }
 }
@@ -36,17 +32,17 @@ class _LineChartPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (data.isEmpty) return;
     final paintLine = Paint()
-      ..color = const Color(0xFF2E3B55)
+      ..color = const Color(0xFF0B2447)
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke;
-    final paintDot = Paint()..color = const Color(0xFFFFA515);
+    final paintDot = Paint()..color = const Color(0xFF4BA3E3);
 
     final scores = data.map((d) {
-        final val = d["total_score"];
-        if (val is num) return val.toDouble();
-        if (val is String) return double.tryParse(val) ?? 0.0;
-        return 0.0;
-      }).toList();
+      final val = d["total_score"];
+      if (val is num) return val.toDouble();
+      if (val is String) return double.tryParse(val) ?? 0.0;
+      return 0.0;
+    }).toList();
     final maxScore = (scores.reduce((a, b) => a > b ? a : b)) + 1.0;
     final padding = 16.0;
     final chartWidth = size.width - 2 * padding;
@@ -63,7 +59,10 @@ class _LineChartPainter extends CustomPainter {
       // Draw week labels
       final weekText = (data[i]['week'] ?? (i + 1)).toString();
       final textPainter = TextPainter(
-        text: TextSpan(text: weekText, style: const TextStyle(color: Colors.grey, fontSize: 10)),
+        text: TextSpan(
+          text: weekText,
+          style: const TextStyle(color: Colors.grey, fontSize: 10),
+        ),
         textDirection: TextDirection.ltr,
       )..layout();
       textPainter.paint(canvas, Offset(dx - textPainter.width / 2, size.height - 15));

@@ -56,7 +56,7 @@ class BookingListTab extends StatelessWidget {
   Widget _badge(String text, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
       child: Text(
         text,
         style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12),
@@ -93,7 +93,7 @@ class BookingListTab extends StatelessWidget {
               padding: EdgeInsets.fromLTRB(4, 4, 4, 8),
               child: Text(
                 'Yêu cầu nạp ví',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1E2937)),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0B2447)),
               ),
             ),
             ...docs.map((doc) {
@@ -105,7 +105,7 @@ class BookingListTab extends StatelessWidget {
                 child: ListTile(
                   leading: const CircleAvatar(
                     backgroundColor: Color(0xFFFFEDD5),
-                    child: Icon(Icons.account_balance_wallet, color: Color(0xFFF97316)),
+                    child: Icon(Icons.account_balance_wallet, color: Color(0xFF1D5D9B)),
                   ),
                   title: Text(data['user_name']?.toString() ?? 'Học viên'),
                   subtitle: Text('Muốn nạp: ${_formatCurrency(amount)}'),

@@ -148,7 +148,7 @@ class HistoryScreen extends StatelessWidget {
                   leading: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(color: Colors.blueGrey[50], borderRadius: BorderRadius.circular(8)),
-                    child: const Icon(Icons.fitness_center, color: Color(0xFF2E3B55)),
+                    child: const Icon(Icons.fitness_center, color: Color(0xFF0B2447)),
                   ),
 
                   // Lúc này gọi ra xài cực kỳ sướng và an toàn

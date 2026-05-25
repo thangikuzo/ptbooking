@@ -12,12 +12,15 @@ class PTRankingScreen extends StatelessWidget {
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text("BẢNG XẾP HẠNG PT", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+          title: const Text(
+            "BẢNG XẾP HẠNG PT",
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          ),
           centerTitle: true,
           flexibleSpace: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF4CAF50), Color(0xFF81C784)],
+                colors: [Color(0xFF1D5D9B), Color(0xFF4BA3E3)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -56,17 +59,16 @@ class _RankingList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('users')
-          .where('role', isEqualTo: 'PT')
-          .snapshots(),
+      stream: FirebaseFirestore.instance.collection('users').where('role', isEqualTo: 'PT').snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator(color: Colors.green));
         }
 
         if (snapshot.hasError) {
-          return Center(child: Text("Đã xảy ra lỗi khi tải dữ liệu", style: TextStyle(color: Colors.red.shade400)));
+          return Center(
+            child: Text("Đã xảy ra lỗi khi tải dữ liệu", style: TextStyle(color: Colors.red.shade400)),
+          );
         }
 
         var docs = snapshot.data?.docs ?? [];
@@ -76,7 +78,7 @@ class _RankingList extends StatelessWidget {
 
         // Lọc và sắp xếp local để tránh lỗi thiếu Composite Index của Firestore
         List<UserModel> pts = docs.map((doc) => UserModel.fromFirestore(doc)).toList();
-        
+
         pts.sort((a, b) {
           if (orderBy == 'rating') {
             return b.rating.compareTo(a.rating);
@@ -97,7 +99,7 @@ class _RankingList extends StatelessWidget {
           itemCount: pts.length,
           itemBuilder: (context, index) {
             UserModel pt = pts[index];
-            
+
             // Xử lý Giao diện màu sắc Top 1, 2, 3
             Color rankColor;
             IconData rankIcon;
@@ -119,7 +121,9 @@ class _RankingList extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => PTDetailScreen(ptData: pt.toMap(), ptUid: pt.uid)),
+                  MaterialPageRoute(
+                    builder: (_) => PTDetailScreen(ptData: pt.toMap(), ptUid: pt.uid),
+                  ),
                 );
               },
               child: Container(
@@ -134,7 +138,7 @@ class _RankingList extends StatelessWidget {
                       color: index < 3 ? rankColor.withOpacity(0.3) : Colors.black.withOpacity(0.05),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
-                    )
+                    ),
                   ],
                 ),
                 child: Row(
@@ -145,34 +149,55 @@ class _RankingList extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(rankIcon, color: index < 3 ? rankColor : Colors.green.shade300, size: index == 0 ? 32 : 28),
-                          Text("#${index + 1}", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: index < 3 ? rankColor : Colors.grey.shade700)),
+                          Icon(
+                            rankIcon,
+                            color: index < 3 ? rankColor : Colors.green.shade300,
+                            size: index == 0 ? 32 : 28,
+                          ),
+                          Text(
+                            "#${index + 1}",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: index < 3 ? rankColor : Colors.grey.shade700,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                     const SizedBox(width: 12),
-                    
+
                     // Ảnh đại diện
                     CircleAvatar(
                       radius: 30,
                       backgroundColor: Colors.green.shade50,
                       backgroundImage: pt.avatar != null && pt.avatar!.isNotEmpty ? NetworkImage(pt.avatar!) : null,
-                      child: (pt.avatar == null || pt.avatar!.isEmpty) ? const Icon(Icons.person, color: Colors.green) : null,
+                      child: (pt.avatar == null || pt.avatar!.isEmpty)
+                          ? const Icon(Icons.person, color: Colors.green)
+                          : null,
                     ),
                     const SizedBox(width: 16),
-                    
+
                     // Thông tin PT
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(pt.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                          Text(
+                            pt.name,
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                           const SizedBox(height: 4),
-                          Text(pt.specialty ?? "Chuyên gia Thể hình", style: TextStyle(color: Colors.green.shade700, fontSize: 13)),
+                          Text(
+                            pt.specialty ?? "Chuyên gia Thể hình",
+                            style: TextStyle(color: Colors.green.shade700, fontSize: 13),
+                          ),
                         ],
                       ),
                     ),
-                    
+
                     // Chỉ số Ranking
                     Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -180,16 +205,25 @@ class _RankingList extends StatelessWidget {
                       children: [
                         if (orderBy == 'rating') ...[
                           const Icon(Icons.star, color: Colors.amber, size: 20),
-                          Text(pt.rating.toStringAsFixed(1), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          Text(
+                            pt.rating.toStringAsFixed(1),
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
                         ] else if (orderBy == 'followerCount') ...[
                           const Icon(Icons.people, color: Colors.blue, size: 20),
-                          Text("${pt.followerCount}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          Text(
+                            "${pt.followerCount}",
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
                         ] else ...[
                           const Icon(Icons.local_fire_department, color: Colors.redAccent, size: 20),
-                          Text("${pt.challengeCount}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        ]
+                          Text(
+                            "${pt.challengeCount}",
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                        ],
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),

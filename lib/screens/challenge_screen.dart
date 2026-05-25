@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../constants/app_colors.dart';
 import '../models/challenge_model.dart';
-import '../models/user_model.dart';
 import 'challenge_detail_screen.dart';
 import 'pt_create_challenge_screen.dart';
 import 'notification_screen.dart';
@@ -53,7 +53,10 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
       WriteBatch batch = FirebaseFirestore.instance.batch();
       for (var doc in snapshot.docs) {
         // Xóa tất cả submissions của challenge này
-        var subSnap = await FirebaseFirestore.instance.collection('submissions').where('challengeId', isEqualTo: doc.id).get();
+        var subSnap = await FirebaseFirestore.instance
+            .collection('submissions')
+            .where('challengeId', isEqualTo: doc.id)
+            .get();
         for (var subDoc in subSnap.docs) {
           batch.delete(subDoc.reference);
         }
@@ -67,10 +70,7 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
 
   Future<void> _checkAndNotifyEndedChallenges(String uid) async {
     try {
-      var snapshot = await FirebaseFirestore.instance
-          .collection('challenges')
-          .where('creatorId', isEqualTo: uid)
-          .get();
+      var snapshot = await FirebaseFirestore.instance.collection('challenges').where('creatorId', isEqualTo: uid).get();
 
       for (var doc in snapshot.docs) {
         var data = doc.data();
@@ -100,11 +100,14 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Đấu Trường Thử Thách", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: const Text(
+          "Đấu Trường Thử Thách",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF4CAF50), Color(0xFF81C784)],
+              colors: [AppColors.primaryDark, AppColors.primary, AppColors.blueAccent],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -123,11 +126,11 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
           StreamBuilder<QuerySnapshot>(
             stream: FirebaseAuth.instance.currentUser != null
                 ? FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(FirebaseAuth.instance.currentUser!.uid)
-                    .collection('notifications')
-                    .where('isRead', isEqualTo: false)
-                    .snapshots()
+                      .collection('users')
+                      .doc(FirebaseAuth.instance.currentUser!.uid)
+                      .collection('notifications')
+                      .where('isRead', isEqualTo: false)
+                      .snapshots()
                 : null,
             builder: (context, snapshot) {
               int unreadCount = 0;
@@ -151,20 +154,23 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(4),
                         decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                        child: Text('$unreadCount', style: const TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold)),
+                        child: Text(
+                          '$unreadCount',
+                          style: const TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold),
+                        ),
                       ),
-                    )
+                    ),
                 ],
               );
             },
-          )
+          ),
         ],
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance.collection('challenges').snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: Colors.green));
+            return const Center(child: CircularProgressIndicator(color: AppColors.primary));
           }
 
           if (snapshot.hasError) {
@@ -180,7 +186,7 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
             itemCount: docs.length,
             itemBuilder: (context, index) {
               Challenge challenge = Challenge.fromFirestore(docs[index]);
-              
+
               // Tính toán thời gian còn lại
               String timeRemaining = "Không giới hạn";
               bool isExpired = false;
@@ -199,9 +205,7 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => ChallengeDetailScreen(challenge: challenge),
-                    ),
+                    MaterialPageRoute(builder: (context) => ChallengeDetailScreen(challenge: challenge)),
                   );
                 },
                 child: Card(
@@ -216,15 +220,18 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.network(
-                            challenge.imageUrl.isNotEmpty ? challenge.imageUrl : 'https://cdn-icons-png.flaticon.com/512/2964/2964514.png',
+                            challenge.imageUrl.isNotEmpty
+                                ? challenge.imageUrl
+                                : 'https://cdn-icons-png.flaticon.com/512/2964/2964514.png',
                             width: 70,
                             height: 70,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 70, color: Colors.grey),
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.broken_image, size: 70, color: Colors.grey),
                           ),
                         ),
                         const SizedBox(width: 16),
-                
+
                         // 2. Chữ
                         Expanded(
                           child: Column(
@@ -233,12 +240,19 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                               Text(
                                 challenge.title,
                                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                maxLines: 1, overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 4),
                               Row(
                                 children: [
-                                  Icon(Icons.flash_on, size: 14, color: challenge.difficulty == 'Rất khó' ? Colors.red : (challenge.difficulty == 'Khó' ? Colors.orange : Colors.green)),
+                                  Icon(
+                                    Icons.flash_on,
+                                    size: 14,
+                                    color: challenge.difficulty == 'Rất khó'
+                                        ? Colors.red
+                                        : (challenge.difficulty == 'Khó' ? Colors.orange : Colors.green),
+                                  ),
                                   Text(challenge.difficulty, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
                                 ],
                               ),
@@ -249,14 +263,18 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                                   const SizedBox(width: 4),
                                   Text(
                                     timeRemaining,
-                                    style: TextStyle(fontSize: 12, color: isExpired ? Colors.red : Colors.grey, fontWeight: isExpired ? FontWeight.bold : FontWeight.normal),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: isExpired ? Colors.red : Colors.grey,
+                                      fontWeight: isExpired ? FontWeight.bold : FontWeight.normal,
+                                    ),
                                   ),
                                 ],
-                              )
+                              ),
                             ],
                           ),
                         ),
-                
+
                         // 3. Điểm
                         Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -264,13 +282,17 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.amber.withOpacity(0.2),
+                                color: AppColors.primaryLight,
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.amber),
+                                border: Border.all(color: AppColors.border),
                               ),
                               child: Text(
                                 '+${challenge.points} EXP',
-                                style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontSize: 12),
+                                style: const TextStyle(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             if (challenge.rating > 0)
@@ -279,12 +301,15 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                                 child: Row(
                                   children: [
                                     const Icon(Icons.star, color: Colors.amber, size: 14),
-                                    Text(challenge.rating.toStringAsFixed(1), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                    Text(
+                                      challenge.rating.toStringAsFixed(1),
+                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                    ),
                                   ],
                                 ),
-                              )
+                              ),
                           ],
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -294,14 +319,19 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
           );
         },
       ),
-      floatingActionButton: _userRole == 'PT' ? FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const PTCreateChallengeScreen()));
-        },
-        backgroundColor: const Color(0xFF4CAF50),
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text("TẠO THỬ THÁCH", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-      ) : null,
+      floatingActionButton: _userRole == 'PT'
+          ? FloatingActionButton.extended(
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const PTCreateChallengeScreen()));
+              },
+              backgroundColor: AppColors.primary,
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: const Text(
+                "TẠO THỬ THÁCH",
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            )
+          : null,
     );
   }
 }

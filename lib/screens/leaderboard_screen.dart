@@ -67,12 +67,15 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text("BẢNG XẾP HẠNG", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+          title: const Text(
+            "BẢNG XẾP HẠNG",
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          ),
           centerTitle: true,
           flexibleSpace: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF4CAF50), Color(0xFF81C784)],
+                colors: [Color(0xFF1D5D9B), Color(0xFF4BA3E3)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -108,28 +111,40 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     }
 
     return Container(
-      color: const Color(0xFFF1F8F5), // Nền xanh nhạt
+      color: const Color(0xFFF6F8FC), // Nền xanh nhạt
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: list.length,
         itemBuilder: (context, index) {
           var item = list[index];
           int rank = index + 1;
-          
+
           Color rankColor;
           IconData rankIcon;
-          
-          if (rank == 1) { rankColor = Colors.amber; rankIcon = Icons.emoji_events; }
-          else if (rank == 2) { rankColor = Colors.grey.shade400; rankIcon = Icons.military_tech; }
-          else if (rank == 3) { rankColor = Colors.orange.shade300; rankIcon = Icons.military_tech; }
-          else { rankColor = Colors.green.shade100; rankIcon = Icons.star_border; }
+
+          if (rank == 1) {
+            rankColor = Colors.amber;
+            rankIcon = Icons.emoji_events;
+          } else if (rank == 2) {
+            rankColor = Colors.grey.shade400;
+            rankIcon = Icons.military_tech;
+          } else if (rank == 3) {
+            rankColor = Colors.orange.shade300;
+            rankIcon = Icons.military_tech;
+          } else {
+            rankColor = Colors.green.shade100;
+            rankIcon = Icons.star_border;
+          }
 
           // Logic tính phần thưởng Gamification
           int expReward = 0;
-          if (rank == 1) expReward = 50;
-          else if (rank == 2) expReward = 30;
-          else if (rank == 3) expReward = 10;
-          
+          if (rank == 1)
+            expReward = 50;
+          else if (rank == 2)
+            expReward = 30;
+          else if (rank == 3)
+            expReward = 10;
+
           // Tab yêu thích chỉ được 1 nửa thưởng
           if (!isScoreRank) {
             expReward = (expReward / 2).floor();
@@ -153,12 +168,19 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(rankIcon, color: rank <= 3 ? rankColor : Colors.green.shade300, size: rank == 1 ? 32 : 28),
-                        Text("#$rank", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: rank <= 3 ? rankColor : Colors.grey.shade700)),
+                        Text(
+                          "#$rank",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: rank <= 3 ? rankColor : Colors.grey.shade700,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                   const SizedBox(width: 12),
-                  
+
                   // Avatar
                   CircleAvatar(
                     radius: 25,
@@ -167,13 +189,18 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     child: item['avatarUrl'] == '' ? const Icon(Icons.person, color: Colors.green) : null,
                   ),
                   const SizedBox(width: 16),
-                  
+
                   // Tên + Quà
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(item['userName'], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text(
+                          item['userName'],
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                         if (expReward > 0)
                           Padding(
                             padding: const EdgeInsets.only(top: 4),
@@ -181,14 +208,21 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                               children: [
                                 const Icon(Icons.card_giftcard, size: 12, color: Colors.green),
                                 const SizedBox(width: 4),
-                                Text("+$expReward EXP", style: const TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.bold)),
+                                Text(
+                                  "+$expReward EXP",
+                                  style: const TextStyle(
+                                    color: Colors.green,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ],
                             ),
-                          )
+                          ),
                       ],
                     ),
                   ),
-                  
+
                   // Chỉ số
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -204,7 +238,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                       if (isScoreRank && item['score'] == 0)
                         const Text("(Chưa chấm)", style: TextStyle(fontSize: 10, color: Colors.grey)),
                     ],
-                  )
+                  ),
                 ],
               ),
             ),

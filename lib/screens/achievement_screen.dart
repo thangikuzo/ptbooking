@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../constants/app_colors.dart';
 import '../models/user_model.dart';
 
 class AchievementScreen extends StatefulWidget {
@@ -35,12 +36,18 @@ class _AchievementScreenState extends State<AchievementScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator(color: Colors.green)));
+    if (_isLoading)
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      );
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Bảng Thành Tích', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.green,
+        title: const Text(
+          'Bảng Thành Tích',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: AppColors.primary,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Padding(
@@ -55,7 +62,12 @@ class _AchievementScreenState extends State<AchievementScreen> {
             else
               Expanded(
                 child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 10, mainAxisSpacing: 10, childAspectRatio: 0.7),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 0.7,
+                  ),
                   itemCount: _currentUser!.unlockedBadges.length,
                   itemBuilder: (context, index) {
                     var badgeData = _currentUser!.unlockedBadges[index];
@@ -64,16 +76,29 @@ class _AchievementScreenState extends State<AchievementScreen> {
 
                     return Container(
                       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                      decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.green.shade200)),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryLight,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.border),
+                      ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Image.asset(badgeImage, width: 55, height: 55, errorBuilder: (c,e,s) => const Icon(Icons.star, color: Colors.amber, size: 40)),
+                          Image.asset(
+                            badgeImage,
+                            width: 55,
+                            height: 55,
+                            errorBuilder: (c, e, s) => const Icon(Icons.star, color: Colors.amber, size: 40),
+                          ),
                           const SizedBox(height: 8),
                           Expanded(
                             child: Text(
-                              challengeName, 
-                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.green.shade900),
+                              challengeName,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primaryDark,
+                              ),
                               textAlign: TextAlign.center,
                               maxLines: 3,
                               overflow: TextOverflow.ellipsis,
@@ -84,7 +109,7 @@ class _AchievementScreenState extends State<AchievementScreen> {
                     );
                   },
                 ),
-              )
+              ),
           ],
         ),
       ),

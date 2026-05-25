@@ -16,7 +16,11 @@ class _AIChatScreenState extends State<AIChatScreen> {
   final ScrollController _scrollController = ScrollController();
 
   final List<Map<String, String>> _messages = [
-    {'sender': 'ai', 'text': 'Chào bạn! Mình là Trợ lý AI hệ thống phòng Gym. Bạn cần tư vấn về giáo án tập luyện hay thông tin PT nào không?'}
+    {
+      'sender': 'ai',
+      'text':
+          'Chào bạn! Mình là Trợ lý AI hệ thống phòng Gym. Bạn cần tư vấn về giáo án tập luyện hay thông tin PT nào không?',
+    },
   ];
 
   bool _isLoading = false;
@@ -62,7 +66,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'message': text,
-          'sessionId': _sessionId,  // Truyền cái UID của Firebase lên n8n
+          'sessionId': _sessionId, // Truyền cái UID của Firebase lên n8n
         }),
       );
 
@@ -75,18 +79,12 @@ class _AIChatScreenState extends State<AIChatScreen> {
         });
       } else {
         setState(() {
-          _messages.add({
-            'sender': 'ai',
-            'text': 'Lỗi ${response.statusCode}: ${response.body}'
-          });
+          _messages.add({'sender': 'ai', 'text': 'Lỗi ${response.statusCode}: ${response.body}'});
         });
       }
     } catch (e) {
       setState(() {
-        _messages.add({
-          'sender': 'ai',
-          'text': 'Lỗi kết nối: $e'
-        });
+        _messages.add({'sender': 'ai', 'text': 'Lỗi kết nối: $e'});
       });
     } finally {
       setState(() {
@@ -142,7 +140,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
                       if (!isMe) ...[
                         Container(
                           padding: const EdgeInsets.all(6),
-                          decoration: const BoxDecoration(color: Color(0xFF2E3B55), shape: BoxShape.circle),
+                          decoration: const BoxDecoration(color: Color(0xFF0B2447), shape: BoxShape.circle),
                           child: const Icon(Icons.smart_toy, size: 16, color: Colors.white),
                         ),
                         const SizedBox(width: 8),
@@ -151,7 +149,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
                         constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
-                          color: isMe ? const Color(0xFFFCA311) : Colors.white,
+                          color: isMe ? const Color(0xFF4BA3E3) : Colors.white,
                           borderRadius: BorderRadius.only(
                             topLeft: const Radius.circular(16),
                             topRight: const Radius.circular(16),
@@ -166,7 +164,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
                           msg['text'] ?? '',
                           style: TextStyle(
                             fontSize: 15,
-                            color: isMe ? Colors.white : const Color(0xFF1E2937),
+                            color: isMe ? Colors.white : const Color(0xFF0B2447),
                             height: 1.4,
                           ),
                         ),
@@ -186,11 +184,15 @@ class _AIChatScreenState extends State<AIChatScreen> {
                 child: Row(
                   children: [
                     const SizedBox(
-                      width: 12, height: 12,
+                      width: 12,
+                      height: 12,
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.grey),
                     ),
                     const SizedBox(width: 8),
-                    Text("AI đang suy nghĩ...", style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic)),
+                    Text(
+                      "AI đang suy nghĩ...",
+                      style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                    ),
                   ],
                 ),
               ),
@@ -198,13 +200,22 @@ class _AIChatScreenState extends State<AIChatScreen> {
 
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(color: Colors.white, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -3))]),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -3)),
+              ],
+            ),
             child: SafeArea(
               child: Row(
                 children: [
                   Expanded(
                     child: Container(
-                      decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(24), border: Border.all(color: Colors.grey.shade200)),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
                       child: TextField(
                         controller: _messageController,
                         textInputAction: TextInputAction.send,
@@ -223,7 +234,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
                     onTap: _sendMessage,
                     child: Container(
                       padding: const EdgeInsets.all(10),
-                      decoration: const BoxDecoration(color: Color(0xFF2E3B55), shape: BoxShape.circle),
+                      decoration: const BoxDecoration(color: Color(0xFF0B2447), shape: BoxShape.circle),
                       child: const Icon(Icons.send_rounded, color: Colors.white, size: 18),
                     ),
                   ),
