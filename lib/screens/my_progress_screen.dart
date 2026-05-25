@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+
+
 class MyProgressScreen extends StatelessWidget {
   const MyProgressScreen({super.key});
 
@@ -67,24 +69,26 @@ class MyProgressScreen extends StatelessWidget {
           docs.sort((a, b) {
             final aData = a.data() as Map<String, dynamic>;
             final bData = b.data() as Map<String, dynamic>;
-            final aTime = aData['created_at'];
-            final bTime = bData['created_at'];
+            final aTime = aData['created_at_ms'];
+            final bTime = bData['created_at_ms'];
 
+            if (aTime is int && bTime is int) {
+              return bTime.compareTo(aTime);
+            }
             if (aTime is Timestamp && bTime is Timestamp) {
               return bTime.compareTo(aTime);
             }
-
             return 0;
           });
 
-          final latestData = docs.first.data() as Map<String, dynamic>;
+           final latestData = docs.first.data() as Map<String, dynamic>;
 
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
               _buildSummaryCard(latestData),
               const SizedBox(height: 16),
-              _buildScoreChart(latestData),
+
               const SizedBox(height: 16),
               _buildNoteCard(latestData),
               const SizedBox(height: 18),

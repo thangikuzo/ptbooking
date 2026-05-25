@@ -8,8 +8,13 @@ class HistoryScreen extends StatelessWidget {
 
   String _translateDay(String day) {
     const days = {
-      'monday': 'Thứ 2', 'tuesday': 'Thứ 3', 'wednesday': 'Thứ 4',
-      'thursday': 'Thứ 5', 'friday': 'Thứ 6', 'saturday': 'Thứ 7', 'sunday': 'Chủ Nhật',
+      'monday': 'Thứ 2',
+      'tuesday': 'Thứ 3',
+      'wednesday': 'Thứ 4',
+      'thursday': 'Thứ 5',
+      'friday': 'Thứ 6',
+      'saturday': 'Thứ 7',
+      'sunday': 'Chủ Nhật',
     };
     return days[day] ?? day;
   }
@@ -20,15 +25,24 @@ class HistoryScreen extends StatelessWidget {
 
     switch (status) {
       case 'pending':
-        color = Colors.orange; text = 'Chờ duyệt'; break;
+        color = Colors.orange;
+        text = 'Chờ duyệt';
+        break;
       case 'confirmed':
-        color = Colors.green; text = 'Đã chốt lịch'; break;
+        color = Colors.green;
+        text = 'Đã chốt lịch';
+        break;
       case 'canceled':
-        color = Colors.red; text = 'Bị từ chối/Hủy'; break;
+        color = Colors.red;
+        text = 'Bị từ chối/Hủy';
+        break;
       case 'completed':
-        color = Colors.blue; text = 'Đã hoàn thành'; break;
+        color = Colors.blue;
+        text = 'Đã hoàn thành';
+        break;
       default:
-        color = Colors.grey; text = 'Không rõ';
+        color = Colors.grey;
+        text = 'Không rõ';
     }
 
     return Container(
@@ -38,7 +52,43 @@ class HistoryScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: color.withOpacity(0.5)),
       ),
-      child: Text(text, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12)),
+      child: Text(
+        text,
+        style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12),
+      ),
+    );
+  }
+
+  Widget _buildPaymentBadge(String status) {
+    Color color = Colors.grey;
+    String text = 'Chưa thanh toán';
+
+    switch (status) {
+      case 'held':
+        color = Colors.blue;
+        text = 'Đã giữ tiền trong ví';
+        break;
+      case 'paid':
+        color = Colors.green;
+        text = 'Đã thanh toán';
+        break;
+      case 'refunded_to_wallet':
+        color = Colors.teal;
+        text = 'Đã hoàn về ví';
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.5)),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12),
+      ),
     );
   }
 
@@ -52,9 +102,7 @@ class HistoryScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text("Lịch sử đặt lịch"),
-      ),
+      appBar: AppBar(title: const Text("Lịch sử đặt lịch")),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('bookings')
@@ -87,7 +135,6 @@ class HistoryScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             itemCount: docs.length,
             itemBuilder: (context, index) {
-
               // --- SỰ KHÁC BIỆT NẰM Ở ĐÂY ---
               // Ép kiểu dữ liệu Firebase thành Đối tượng BookingModel
               BookingModel booking = BookingModel.fromFirestore(docs[index]);
@@ -105,7 +152,10 @@ class HistoryScreen extends StatelessWidget {
                   ),
 
                   // Lúc này gọi ra xài cực kỳ sướng và an toàn
-                  title: Text("PT: ${booking.ptName}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  title: Text(
+                    "PT: ${booking.ptName}",
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -118,8 +168,19 @@ class HistoryScreen extends StatelessWidget {
                           Text("${_translateDay(booking.day)} (${booking.bookingDate}) | ${booking.timeSlot}"),
                         ],
                       ),
+                      if (booking.packageName.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          "Gói tập: ${booking.packageName} (${booking.sessionCount} buổi)",
+                          style: TextStyle(color: Colors.grey[700], fontSize: 13),
+                        ),
+                      ],
                       const SizedBox(height: 8),
-                      _buildStatusBadge(booking.status), // Truyền status từ Model
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [_buildStatusBadge(booking.status), _buildPaymentBadge(booking.paymentStatus)],
+                      ),
                     ],
                   ),
                 ),

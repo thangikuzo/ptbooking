@@ -10,12 +10,10 @@ class PTBookingManagementScreen extends StatefulWidget {
   const PTBookingManagementScreen({super.key});
 
   @override
-  State<PTBookingManagementScreen> createState() =>
-      _PTBookingManagementScreenState();
+  State<PTBookingManagementScreen> createState() => _PTBookingManagementScreenState();
 }
 
-class _PTBookingManagementScreenState
-    extends State<PTBookingManagementScreen> {
+class _PTBookingManagementScreenState extends State<PTBookingManagementScreen> {
   final BookingService _bookingService = BookingService();
   final User? _currentUser = FirebaseAuth.instance.currentUser;
 
@@ -40,9 +38,7 @@ class _PTBookingManagementScreenState
     }
   }
 
-  Future<String> _createOrGetChatRoom({
-    required BookingModel booking,
-  }) async {
+  Future<String> _createOrGetChatRoom({required BookingModel booking}) async {
     final chatQuery = await FirebaseFirestore.instance
         .collection('chats')
         .where('customer_id', isEqualTo: booking.userId)
@@ -71,10 +67,7 @@ class _PTBookingManagementScreenState
   Future<String> _getStudentName(String studentId, String fallbackName) async {
     if (studentId.isEmpty) return fallbackName;
 
-    final userDoc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(studentId)
-        .get();
+    final userDoc = await FirebaseFirestore.instance.collection('users').doc(studentId).get();
 
     if (userDoc.exists && userDoc.data() != null) {
       final data = userDoc.data()!;
@@ -84,58 +77,32 @@ class _PTBookingManagementScreenState
     return fallbackName;
   }
 
-  Future<void> _handleUpdateStatus(
-      BookingModel booking,
-      String newStatus,
-      ) async {
+  Future<void> _handleUpdateStatus(BookingModel booking, String newStatus) async {
     try {
-      await _bookingService.updateBookingStatus(
-        booking.id,
-        newStatus,
-      );
+      await _bookingService.updateBookingStatus(booking.id, newStatus);
 
       if (newStatus == 'confirmed') {
-        final chatId = await _createOrGetChatRoom(
-          booking: booking,
-        );
+        final chatId = await _createOrGetChatRoom(booking: booking);
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Đã chấp nhận lịch tập!"),
-              backgroundColor: Colors.green,
-            ),
-          );
-
-          Navigator.push(
+          ScaffoldMessenger.of(
             context,
-            MaterialPageRoute(
-              builder: (_) => ChatScreen(
-                chatId: chatId,
-              ),
-            ),
-          );
+          ).showSnackBar(const SnackBar(content: Text("Đã chấp nhận lịch tập!"), backgroundColor: Colors.green));
+
+          Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(chatId: chatId)));
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Đã từ chối yêu cầu."),
-              backgroundColor: Colors.red,
-            ),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text("Đã từ chối yêu cầu."), backgroundColor: Colors.red));
         }
       }
     } catch (e) {
       debugPrint("Lỗi cập nhật: $e");
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Lỗi: $e"),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Lỗi: $e"), backgroundColor: Colors.red));
       }
     }
   }
@@ -143,38 +110,30 @@ class _PTBookingManagementScreenState
   @override
   Widget build(BuildContext context) {
     if (_currentUser == null) {
-      return const Scaffold(
-        body: Center(
-          child: Text("Vui lòng đăng nhập"),
-        ),
-      );
+      return const Scaffold(body: Center(child: Text("Vui lòng đăng nhập")));
     }
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        title: const Text("Yêu cầu đặt lịch"),
-
-      ),
+      appBar: AppBar(title: const Text("Yêu cầu đặt lịch")),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('bookings')
-            .where('pt_id', isEqualTo: _currentUser!.uid)
+            .where('pt_id', isEqualTo: _currentUser.uid)
             .where('status', isEqualTo: 'pending')
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
-          final docs = snapshot.data?.docs ?? [];
+          final docs = (snapshot.data?.docs ?? []).where((doc) {
+            final booking = BookingModel.fromFirestore(doc);
+            return booking.paymentStatus == 'held' || booking.paymentStatus == 'paid';
+          }).toList();
 
           if (docs.isEmpty) {
-            return const Center(
-              child: Text("Không có yêu cầu nào mới."),
-            );
+            return const Center(child: Text("Không có yêu cầu đã giữ tiền nào mới."));
           }
 
           return ListView.builder(
@@ -185,9 +144,7 @@ class _PTBookingManagementScreenState
               final studentId = booking.userId;
 
               return Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                 margin: const EdgeInsets.only(bottom: 12),
                 child: ListTile(
                   contentPadding: const EdgeInsets.all(16),
@@ -197,13 +154,7 @@ class _PTBookingManagementScreenState
                     builder: (context, userSnapshot) {
                       final name = userSnapshot.data ?? booking.userName;
 
-                      return Text(
-                        name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      );
+                      return Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18));
                     },
                   ),
 
@@ -211,12 +162,10 @@ class _PTBookingManagementScreenState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 4),
-                      Text(
-                        "Ngày: ${booking.bookingDate} (${_translateDay(booking.day)})",
-                      ),
-                      Text(
-                        "Giờ tập: ${booking.timeSlot}",
-                      ),
+                      Text("Ngày: ${booking.bookingDate} (${_translateDay(booking.day)})"),
+                      Text("Giờ tập: ${booking.timeSlot}"),
+                      if (booking.packageName.isNotEmpty)
+                        Text("Gói tập: ${booking.packageName} (${booking.sessionCount} buổi)"),
                     ],
                   ),
 
@@ -224,24 +173,12 @@ class _PTBookingManagementScreenState
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: const Icon(
-                          Icons.cancel,
-                          color: Colors.red,
-                        ),
-                        onPressed: () => _handleUpdateStatus(
-                          booking,
-                          'canceled',
-                        ),
+                        icon: const Icon(Icons.cancel, color: Colors.red),
+                        onPressed: () => _handleUpdateStatus(booking, 'canceled'),
                       ),
                       IconButton(
-                        icon: const Icon(
-                          Icons.check_circle,
-                          color: Colors.green,
-                        ),
-                        onPressed: () => _handleUpdateStatus(
-                          booking,
-                          'confirmed',
-                        ),
+                        icon: const Icon(Icons.check_circle, color: Colors.green),
+                        onPressed: () => _handleUpdateStatus(booking, 'confirmed'),
                       ),
                     ],
                   ),

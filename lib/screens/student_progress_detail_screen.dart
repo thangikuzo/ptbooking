@@ -22,35 +22,42 @@ class _StudentProgressDetailScreenState
     extends State<StudentProgressDetailScreen> {
   final TextEditingController noteController = TextEditingController();
 
+
+
   int selectedWeek = 1;
   int selectedMonth = DateTime.now().month;
   int selectedYear = DateTime.now().year;
 
   double attendance = 8;
-  double technique = 7;
-  double stamina = 7;
+  double technique = 8;
+  double stamina = 8;
   double attitude = 8;
-  double nutrition = 6;
+  double nutrition = 8;
 
   bool isSaving = false;
 
-  double get totalScore {
+  double get _computedScore {
     return (attendance + technique + stamina + attitude + nutrition) / 5;
   }
 
+
+
   String get rank {
-    if (totalScore >= 9) return "Xuất sắc";
-    if (totalScore >= 8) return "Tốt";
-    if (totalScore >= 6.5) return "Khá";
-    if (totalScore >= 5) return "Trung bình";
+    if (_computedScore >= 9) return "Xuất sắc";
+    if (_computedScore >= 8) return "Tốt";
+    if (_computedScore >= 6.5) return "Khá";
+    if (_computedScore >= 5) return "Trung bình";
     return "Cần cải thiện";
   }
 
   Color get rankColor {
-    if (totalScore >= 8) return Colors.green;
-    if (totalScore >= 6.5) return Colors.orange;
+    if (_computedScore >= 8) return Colors.green;
+    if (_computedScore >= 6.5) return Colors.orange;
     return Colors.red;
   }
+
+  @override
+
 
   Future<void> _saveProgress() async {
     setState(() => isSaving = true);
@@ -70,7 +77,8 @@ class _StudentProgressDetailScreenState
       'attitude_score': attitude.toInt(),
       'nutrition_score': nutrition.toInt(),
 
-      'total_score': totalScore.toStringAsFixed(1),
+      'total_score': _computedScore, // store as double
+      'created_at_ms': DateTime.now().millisecondsSinceEpoch,
       'rank': rank,
       'note': noteController.text.trim(),
       'created_at': FieldValue.serverTimestamp(),
@@ -91,8 +99,15 @@ class _StudentProgressDetailScreenState
   }
 
   @override
+  void initState() {
+    super.initState();
+
+  }
+
+  @override
   void dispose() {
     noteController.dispose();
+
     super.dispose();
   }
 
@@ -156,6 +171,8 @@ class _StudentProgressDetailScreenState
             value: nutrition,
             onChanged: (v) => setState(() => nutrition = v),
           ),
+
+          const SizedBox(height: 10),
 
           const SizedBox(height: 10),
           _buildNoteBox(),
@@ -311,7 +328,7 @@ class _StudentProgressDetailScreenState
             ),
             child: Center(
               child: Text(
-                totalScore.toStringAsFixed(1),
+                _computedScore.toStringAsFixed(1),
                 style: TextStyle(
                   color: rankColor,
                   fontWeight: FontWeight.bold,
@@ -342,7 +359,7 @@ class _StudentProgressDetailScreenState
                 ClipRRect(
                   borderRadius: BorderRadius.circular(20),
                   child: LinearProgressIndicator(
-                    value: totalScore / 10,
+                    value: _computedScore / 10,
                     minHeight: 9,
                     backgroundColor: Colors.grey[200],
                     color: rankColor,

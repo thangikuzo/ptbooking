@@ -10,8 +10,13 @@ class PTTeachingScheduleScreen extends StatelessWidget {
 
   String _translateDay(String day) {
     const days = {
-      'monday': 'Thứ 2', 'tuesday': 'Thứ 3', 'wednesday': 'Thứ 4',
-      'thursday': 'Thứ 5', 'friday': 'Thứ 6', 'saturday': 'Thứ 7', 'sunday': 'Chủ Nhật',
+      'monday': 'Thứ 2',
+      'tuesday': 'Thứ 3',
+      'wednesday': 'Thứ 4',
+      'thursday': 'Thứ 5',
+      'friday': 'Thứ 6',
+      'saturday': 'Thứ 7',
+      'sunday': 'Chủ Nhật',
     };
     return days[day] ?? day;
   }
@@ -161,10 +166,7 @@ class PTTeachingScheduleScreen extends StatelessWidget {
                         children: [
                           Container(
                             padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.1),
-                              shape: BoxShape.circle,
-                            ),
+                            decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), shape: BoxShape.circle),
                             child: const Icon(Icons.person, color: Colors.green, size: 28),
                           ),
                           const SizedBox(width: 16),
@@ -175,8 +177,19 @@ class PTTeachingScheduleScreen extends StatelessWidget {
                               children: [
                                 Text(
                                   "Học viên: ${firstBooking.userName}",
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Color(0xFF1E2937)),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 17,
+                                    color: Color(0xFF1E2937),
+                                  ),
                                 ),
+                                if (firstBooking.packageName.isNotEmpty) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    "Gói tập: ${firstBooking.packageName} (${firstBooking.sessionCount} buổi)",
+                                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                  ),
+                                ],
                                 const SizedBox(height: 12),
 
                                 // Danh sách Lịch tập đã gộp
@@ -251,10 +264,7 @@ class PTTeachingScheduleScreen extends StatelessWidget {
                           // Nút Chat bự bên phải
                           Container(
                             margin: const EdgeInsets.only(left: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.withOpacity(0.08),
-                              shape: BoxShape.circle,
-                            ),
+                            decoration: BoxDecoration(color: Colors.blue.withOpacity(0.08), shape: BoxShape.circle),
                             child: IconButton(
                               icon: const Icon(Icons.chat_bubble_rounded, color: Colors.blueAccent, size: 22),
                               onPressed: () async {

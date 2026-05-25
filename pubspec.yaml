@@ -45,6 +45,7 @@ dependencies:
   flutter_local_notifications: ^21.0.0
   timezone: ^0.11.0
   shared_preferences: ^2.5.5
+  url_launcher: ^6.2.0
 
 dev_dependencies:
   flutter_test:
@@ -72,6 +73,9 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
+     - lib/services/momo.jpg
+
+
       - assets/frame_avatar/
       - assets/frame_chat/
       - assets/badges/
