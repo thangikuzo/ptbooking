@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../constants/app_colors.dart';
 import '../services/auth_service.dart';
 import '../models/user_model.dart';
 
@@ -35,50 +36,38 @@ class _AccountScreenState extends State<AccountScreen> {
   Widget build(BuildContext context) {
     User? currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
-      return const Scaffold(
-        body: Center(
-          child: Text("Vui lòng đăng nhập"),
-        ),
-      );
+      return const Scaffold(body: Center(child: Text("Vui lòng đăng nhập")));
     }
 
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance.collection('users').doc(currentUser.uid).snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData || snapshot.data == null) {
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
 
         var doc = snapshot.data!;
         if (!doc.exists) {
-          return const Scaffold(
-            body: Center(
-              child: Text("Không tìm thấy dữ liệu"),
-            ),
-          );
+          return const Scaffold(body: Center(child: Text("Không tìm thấy dữ liệu")));
         }
         _userModel = UserModel.fromFirestore(doc);
 
         String roleDisplay = "Khách hàng";
-        Color roleColor = Colors.blueGrey;
+        Color roleColor = AppColors.primary;
 
         if (_userModel?.role == 'PT') {
           roleDisplay = "Huấn luyện viên (PT)";
-          roleColor = const Color(0xFFFCA311);
+          roleColor = AppColors.accent;
         } else if (_userModel?.role == 'Admin') {
           roleDisplay = "Quản trị viên";
-          roleColor = Colors.redAccent;
+          roleColor = AppColors.primaryDark;
         }
 
         final isUser = _userModel?.role.toLowerCase() == 'user';
         final isPT = _userModel?.role == 'PT';
 
         return Scaffold(
-          backgroundColor: const Color(0xFFF6F7FB),
+          backgroundColor: AppColors.background,
           body: SafeArea(
             child: Column(
               children: [
@@ -88,10 +77,7 @@ class _AccountScreenState extends State<AccountScreen> {
                   child: ListView(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     children: [
-                      if (isUser) ...[
-                        _buildLoginStreak(),
-                        const SizedBox(height: 16),
-                      ],
+                      if (isUser) ...[_buildLoginStreak(), const SizedBox(height: 16)],
                       _buildMenuItem(Icons.person_outline, "Chỉnh sửa hồ sơ", () {
                         Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen()));
                       }),
@@ -133,20 +119,15 @@ class _AccountScreenState extends State<AccountScreen> {
                         Navigator.push(context, MaterialPageRoute(builder: (_) => const DevToolScreen()));
                       }),
                       const SizedBox(height: 10),
-                      _buildMenuItem(
-                        Icons.logout,
-                        "Đăng xuất",
-                        () async {
-                          await _authService.logout();
-                          if (context.mounted) {
-                            Navigator.of(context).pushAndRemoveUntil(
-                              MaterialPageRoute(builder: (_) => const LoginScreen()),
-                              (route) => false,
-                            );
-                          }
-                        },
-                        isDestructive: true,
-                      ),
+                      _buildMenuItem(Icons.logout, "Đăng xuất", () async {
+                        await _authService.logout();
+                        if (context.mounted) {
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(builder: (_) => const LoginScreen()),
+                            (route) => false,
+                          );
+                        }
+                      }, isDestructive: true),
                     ],
                   ),
                 ),
@@ -166,13 +147,7 @@ class _AccountScreenState extends State<AccountScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,18 +156,11 @@ class _AccountScreenState extends State<AccountScreen> {
             children: [
               const Icon(Icons.local_fire_department, color: Colors.deepOrange, size: 24),
               const SizedBox(width: 8),
-              const Text(
-                "Chuỗi đăng nhập",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
+              const Text("Chuỗi đăng nhập", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               const Spacer(),
               Text(
                 "$streak ngày",
-                style: const TextStyle(
-                  color: Colors.deepOrange,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
+                style: const TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.bold, fontSize: 16),
               ),
             ],
           ),
@@ -255,31 +223,16 @@ class _AccountScreenState extends State<AccountScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF4CAF50), Color(0xFF81C784)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(28),
-          bottomRight: Radius.circular(28),
-        ),
-        boxShadow: [
-          BoxShadow(color: Colors.black26, offset: Offset(0, 4), blurRadius: 8),
-        ],
+        gradient: AppColors.primaryGradient,
+        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(28), bottomRight: Radius.circular(28)),
+        boxShadow: [BoxShadow(color: Colors.black26, offset: Offset(0, 4), blurRadius: 8)],
       ),
       child: Column(
         children: [
           Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  spreadRadius: 2,
-                  blurRadius: 8,
-                ),
-              ],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), spreadRadius: 2, blurRadius: 8)],
             ),
             child: SizedBox(
               width: 115,
@@ -301,10 +254,7 @@ class _AccountScreenState extends State<AccountScreen> {
                     SizedBox(
                       width: 115,
                       height: 115,
-                      child: Image.asset(
-                        _userModel!.selectedFrame!.replaceAll('.jpg', '.png'),
-                        fit: BoxFit.contain,
-                      ),
+                      child: Image.asset(_userModel!.selectedFrame!.replaceAll('.jpg', '.png'), fit: BoxFit.contain),
                     ),
                 ],
               ),
@@ -317,20 +267,11 @@ class _AccountScreenState extends State<AccountScreen> {
               color: Colors.white,
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              shadows: [
-                Shadow(
-                  color: Colors.black26,
-                  offset: Offset(1, 1),
-                  blurRadius: 2,
-                ),
-              ],
+              shadows: [Shadow(color: Colors.black26, offset: Offset(1, 1), blurRadius: 2)],
             ),
           ),
           const SizedBox(height: 6),
-          Text(
-            _userModel?.email ?? "",
-            style: const TextStyle(color: Colors.white, fontSize: 13),
-          ),
+          Text(_userModel?.email ?? "", style: const TextStyle(color: Colors.white, fontSize: 13)),
           const SizedBox(height: 12),
           if (isUser) ...[
             Row(
@@ -345,14 +286,14 @@ class _AccountScreenState extends State<AccountScreen> {
                   ),
                   child: Text(
                     "Lv ${_userModel?.level ?? 1}",
-                    style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12),
+                    style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 12),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2E7D32),
+                    color: AppColors.primaryDark,
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
                   ),
@@ -365,7 +306,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.amber.shade700,
+                    color: AppColors.accent,
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
                   ),
@@ -390,17 +331,11 @@ class _AccountScreenState extends State<AccountScreen> {
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 4),
-        ],
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
       ),
       child: Text(
         text,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: textColor,
-        ),
+        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: textColor),
       ),
     );
   }
@@ -411,33 +346,21 @@ class _AccountScreenState extends State<AccountScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: isDestructive ? Colors.red.withOpacity(0.1) : const Color(0xFF2E3B55).withOpacity(0.1),
+            color: isDestructive ? Colors.red.withOpacity(0.1) : AppColors.primary.withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(
-            icon,
-            color: isDestructive ? Colors.red : const Color(0xFF2E3B55),
-          ),
+          child: Icon(icon, color: isDestructive ? Colors.red : AppColors.primary),
         ),
         title: Text(
           title,
-          style: TextStyle(
-            color: isDestructive ? Colors.red : Colors.black87,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(color: isDestructive ? Colors.red : Colors.black87, fontWeight: FontWeight.w600),
         ),
         trailing: const Icon(Icons.chevron_right, color: Colors.grey),
         onTap: onTap,

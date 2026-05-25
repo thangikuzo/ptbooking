@@ -14,15 +14,11 @@ class StudentProgressDetailScreen extends StatefulWidget {
   });
 
   @override
-  State<StudentProgressDetailScreen> createState() =>
-      _StudentProgressDetailScreenState();
+  State<StudentProgressDetailScreen> createState() => _StudentProgressDetailScreenState();
 }
 
-class _StudentProgressDetailScreenState
-    extends State<StudentProgressDetailScreen> {
+class _StudentProgressDetailScreenState extends State<StudentProgressDetailScreen> {
   final TextEditingController noteController = TextEditingController();
-
-
 
   int selectedWeek = 1;
   int selectedMonth = DateTime.now().month;
@@ -40,8 +36,6 @@ class _StudentProgressDetailScreenState
     return (attendance + technique + stamina + attitude + nutrition) / 5;
   }
 
-
-
   String get rank {
     if (_computedScore >= 9) return "Xuất sắc";
     if (_computedScore >= 8) return "Tốt";
@@ -55,9 +49,6 @@ class _StudentProgressDetailScreenState
     if (_computedScore >= 6.5) return Colors.orange;
     return Colors.red;
   }
-
-  @override
-
 
   Future<void> _saveProgress() async {
     setState(() => isSaving = true);
@@ -87,12 +78,9 @@ class _StudentProgressDetailScreenState
     if (mounted) {
       setState(() => isSaving = false);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Đã lưu đánh giá tuần."),
-          backgroundColor: Colors.green,
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Đã lưu đánh giá tuần."), backgroundColor: Colors.green));
 
       Navigator.pop(context);
     }
@@ -101,7 +89,6 @@ class _StudentProgressDetailScreenState
   @override
   void initState() {
     super.initState();
-
   }
 
   @override
@@ -113,15 +100,12 @@ class _StudentProgressDetailScreenState
 
   @override
   Widget build(BuildContext context) {
-    const primaryColor = Color(0xFF2E3B55);
-    const accentColor = Color(0xFFFCA311);
+    const primaryColor = Color(0xFF0B2447);
+    const accentColor = Color(0xFF4BA3E3);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7FB),
-      appBar: AppBar(
-        title: const Text("Đánh giá học viên"),
-        backgroundColor: primaryColor,
-      ),
+      appBar: AppBar(title: const Text("Đánh giá học viên"), backgroundColor: primaryColor),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -183,19 +167,14 @@ class _StudentProgressDetailScreenState
             style: ElevatedButton.styleFrom(
               backgroundColor: accentColor,
               padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             ),
             child: isSaving
                 ? const CircularProgressIndicator(color: Colors.white)
                 : const Text(
-              "LƯU ĐÁNH GIÁ TUẦN",
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+                    "LƯU ĐÁNH GIÁ TUẦN",
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
           ),
         ],
       ),
@@ -205,10 +184,7 @@ class _StudentProgressDetailScreenState
   Widget _buildHeader(Color primaryColor) {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: primaryColor,
-        borderRadius: BorderRadius.circular(22),
-      ),
+      decoration: BoxDecoration(color: primaryColor, borderRadius: BorderRadius.circular(22)),
       child: Row(
         children: [
           CircleAvatar(
@@ -221,18 +197,11 @@ class _StudentProgressDetailScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  "Bảng đánh giá tiến độ",
-                  style: TextStyle(color: Colors.white70, fontSize: 13),
-                ),
+                const Text("Bảng đánh giá tiến độ", style: TextStyle(color: Colors.white70, fontSize: 13)),
                 const SizedBox(height: 4),
                 Text(
                   widget.studentName,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 21,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: const TextStyle(color: Colors.white, fontSize: 21, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -254,10 +223,7 @@ class _StudentProgressDetailScreenState
               decoration: const InputDecoration(labelText: "Tuần"),
               items: List.generate(5, (index) {
                 final week = index + 1;
-                return DropdownMenuItem(
-                  value: week,
-                  child: Text("Tuần $week"),
-                );
+                return DropdownMenuItem(value: week, child: Text("Tuần $week"));
               }),
               onChanged: (value) {
                 setState(() {
@@ -273,10 +239,7 @@ class _StudentProgressDetailScreenState
               decoration: const InputDecoration(labelText: "Tháng"),
               items: List.generate(12, (index) {
                 final month = index + 1;
-                return DropdownMenuItem(
-                  value: month,
-                  child: Text("Tháng $month"),
-                );
+                return DropdownMenuItem(value: month, child: Text("Tháng $month"));
               }),
               onChanged: (value) {
                 setState(() {
@@ -290,15 +253,8 @@ class _StudentProgressDetailScreenState
             child: DropdownButtonFormField<int>(
               value: selectedYear,
               decoration: const InputDecoration(labelText: "Năm"),
-              items: [
-                DateTime.now().year - 1,
-                DateTime.now().year,
-                DateTime.now().year + 1,
-              ].map((year) {
-                return DropdownMenuItem(
-                  value: year,
-                  child: Text("$year"),
-                );
+              items: [DateTime.now().year - 1, DateTime.now().year, DateTime.now().year + 1].map((year) {
+                return DropdownMenuItem(value: year, child: Text("$year"));
               }).toList(),
               onChanged: (value) {
                 setState(() {
@@ -329,11 +285,7 @@ class _StudentProgressDetailScreenState
             child: Center(
               child: Text(
                 _computedScore.toStringAsFixed(1),
-                style: TextStyle(
-                  color: rankColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 24,
-                ),
+                style: TextStyle(color: rankColor, fontWeight: FontWeight.bold, fontSize: 24),
               ),
             ),
           ),
@@ -342,18 +294,11 @@ class _StudentProgressDetailScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  "Điểm tổng quan tuần này",
-                  style: TextStyle(color: Colors.grey),
-                ),
+                const Text("Điểm tổng quan tuần này", style: TextStyle(color: Colors.grey)),
                 const SizedBox(height: 4),
                 Text(
                   rank,
-                  style: TextStyle(
-                    color: rankColor,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(color: rankColor, fontSize: 22, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 6),
                 ClipRRect(
@@ -389,34 +334,22 @@ class _StudentProgressDetailScreenState
           Row(
             children: [
               CircleAvatar(
-                backgroundColor: const Color(0xFFFCA311).withOpacity(0.15),
-                child: Icon(icon, color: const Color(0xFFFCA311)),
+                backgroundColor: const Color(0xFF4BA3E3).withOpacity(0.15),
+                child: Icon(icon, color: const Color(0xFF4BA3E3)),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(color: Colors.grey, fontSize: 12),
-                    ),
+                    Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 12)),
                   ],
                 ),
               ),
               Text(
                 "${value.toInt()}/10",
-                style: const TextStyle(
-                  color: Colors.orange,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -425,7 +358,7 @@ class _StudentProgressDetailScreenState
             min: 0,
             max: 10,
             divisions: 10,
-            activeColor: const Color(0xFFFCA311),
+            activeColor: const Color(0xFF4BA3E3),
             label: value.toInt().toString(),
             onChanged: onChanged,
           ),
@@ -444,10 +377,7 @@ class _StudentProgressDetailScreenState
         filled: true,
         fillColor: Colors.white,
         alignLabelWithHint: true,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide.none,
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: BorderSide.none),
       ),
     );
   }
@@ -456,13 +386,7 @@ class _StudentProgressDetailScreenState
     return BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(22),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.04),
-          blurRadius: 12,
-          offset: const Offset(0, 5),
-        ),
-      ],
+      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 5))],
     );
   }
 }

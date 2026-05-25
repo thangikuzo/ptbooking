@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/user_model.dart';
+import '../constants/app_colors.dart';
 import '../constants/gamification_constants.dart';
 
 class BattlePassScreen extends StatefulWidget {
@@ -37,30 +38,32 @@ class _BattlePassScreenState extends State<BattlePassScreen> {
   // Luồng mua VIP Ảo
   Future<void> _buyVip() async {
     if (_currentUser == null) return;
-    
-    bool confirm = await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Kích hoạt VIP"),
-        content: const Text("Bạn có muốn kích hoạt thẻ Battle Pass VIP với giá 199.000đ không?"),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("HỦY")),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            onPressed: () => Navigator.pop(context, true), 
-            child: const Text("MUA NGAY", style: TextStyle(color: Colors.white))
+
+    bool confirm =
+        await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Kích hoạt VIP"),
+            content: const Text("Bạn có muốn kích hoạt thẻ Battle Pass VIP với giá 199.000đ không?"),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("HỦY")),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text("MUA NGAY", style: TextStyle(color: Colors.white)),
+              ),
+            ],
           ),
-        ],
-      ),
-    ) ?? false;
+        ) ??
+        false;
 
     if (confirm) {
-      await FirebaseFirestore.instance.collection('users').doc(_currentUser!.uid).update({
-        'isVip': true
-      });
-      _loadUser(); 
+      await FirebaseFirestore.instance.collection('users').doc(_currentUser!.uid).update({'isVip': true});
+      _loadUser();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Kích hoạt VIP thành công!'), backgroundColor: Colors.green));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Kích hoạt VIP thành công!'), backgroundColor: Colors.green));
       }
     }
   }
@@ -68,17 +71,22 @@ class _BattlePassScreenState extends State<BattlePassScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator(color: Colors.green)));
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      );
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F8F5), // Nền xanh nhạt
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text("BATTLE PASS", style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 2, color: Colors.white)),
+        title: const Text(
+          "BATTLE PASS",
+          style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 2, color: Colors.white),
+        ),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF4CAF50), Color(0xFF81C784)],
+              colors: [AppColors.primaryDark, AppColors.primary, AppColors.blueAccent],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -93,7 +101,7 @@ class _BattlePassScreenState extends State<BattlePassScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: const BoxDecoration(
-              gradient: LinearGradient(colors: [Color(0xFF4CAF50), Color(0xFFA5D6A7)]),
+              gradient: AppColors.primaryGradient,
               borderRadius: BorderRadius.only(bottomLeft: Radius.circular(30), bottomRight: Radius.circular(30)),
               boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
             ),
@@ -107,35 +115,66 @@ class _BattlePassScreenState extends State<BattlePassScreen> {
                       children: [
                         const Text("Mùa 1: Đỉnh Cao Thể Lực", style: TextStyle(color: Colors.white70, fontSize: 14)),
                         const SizedBox(height: 5),
-                        Text("CẤP ĐỘ ${_currentUser?.bpLevel ?? 1}", style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold, shadows: [Shadow(color: Colors.black26, blurRadius: 2, offset: Offset(1, 1))])),
+                        Text(
+                          "CẤP ĐỘ ${_currentUser?.bpLevel ?? 1}",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            shadows: [Shadow(color: Colors.black26, blurRadius: 2, offset: Offset(1, 1))],
+                          ),
+                        ),
                       ],
                     ),
                     if (!(_currentUser?.isVip ?? false))
                       ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.amber.shade600, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), elevation: 4),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.accent,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          elevation: 4,
+                        ),
                         onPressed: _buyVip,
                         icon: const Icon(Icons.star, color: Colors.white),
-                        label: const Text("MỞ KHÓA VIP", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        label: const Text(
+                          "MỞ KHÓA VIP",
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        ),
                       )
                     else
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)]),
-                        child: Row(children: [Icon(Icons.star, color: Colors.amber.shade600), const SizedBox(width: 5), Text("ĐÃ MỞ VIP", style: TextStyle(color: Colors.amber.shade700, fontWeight: FontWeight.bold))]),
-                      )
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.star, color: AppColors.accent),
+                            SizedBox(width: 5),
+                            Text(
+                              "ĐÃ MỞ VIP",
+                              style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 20),
                 // Thanh kinh nghiệm
                 LinearProgressIndicator(
                   value: (_currentUser?.bpExp ?? 0) / 50.0,
-                  backgroundColor: Colors.white.withOpacity(0.3),
+                  backgroundColor: Colors.white.withValues(alpha: 0.3),
                   valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                   minHeight: 12,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 const SizedBox(height: 8),
-                Text("${_currentUser?.bpExp ?? 0} / 50 BP EXP", style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                Text(
+                  "${_currentUser?.bpExp ?? 0} / 50 BP EXP",
+                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                ),
               ],
             ),
           ),
@@ -145,9 +184,23 @@ class _BattlePassScreenState extends State<BattlePassScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
-                Expanded(child: Center(child: Text("FREE", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey.shade600, letterSpacing: 1)))),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      "FREE",
+                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey.shade600, letterSpacing: 1),
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 60),
-                Expanded(child: Center(child: Text("VIP", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber.shade700, letterSpacing: 1)))),
+                const Expanded(
+                  child: Center(
+                    child: Text(
+                      "VIP",
+                      style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary, letterSpacing: 1),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -160,11 +213,11 @@ class _BattlePassScreenState extends State<BattlePassScreen> {
               itemBuilder: (context, index) {
                 int level = index + 1;
                 bool isUnlocked = level <= (_currentUser?.bpLevel ?? 1);
-                
+
                 return _buildRewardRow(level, isUnlocked);
               },
             ),
-          )
+          ),
         ],
       ),
     );
@@ -173,7 +226,7 @@ class _BattlePassScreenState extends State<BattlePassScreen> {
   Widget _buildRewardRow(int level, bool isUnlocked) {
     var freeList = GamificationConstants.BATTLEPASS_REWARDS_FREE;
     var vipList = GamificationConstants.BATTLEPASS_REWARDS_VIP;
-    
+
     var freeRewardData = freeList.firstWhere((element) => element['level'] == level, orElse: () => {});
     var vipRewardData = vipList.firstWhere((element) => element['level'] == level, orElse: () => {});
 
@@ -195,39 +248,35 @@ class _BattlePassScreenState extends State<BattlePassScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: isUnlocked ? Border.all(color: Colors.green.shade200, width: 2) : Border.all(color: Colors.grey.shade200),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))],
+        border: isUnlocked ? Border.all(color: AppColors.border, width: 2) : Border.all(color: Colors.grey.shade200),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 2))],
       ),
       child: Row(
         children: [
           // Quà Free
-          Expanded(
-            child: _buildRewardItem(freeRewardName, freeImage, freeIconFallback, isUnlocked, true),
-          ),
-          
+          Expanded(child: _buildRewardItem(freeRewardName, freeImage, freeIconFallback, isUnlocked, true)),
+
           // Cột Mốc Cấp Độ ở giữa
           Container(
             width: 50,
             decoration: BoxDecoration(
-              gradient: isUnlocked ? LinearGradient(colors: [Colors.green.shade400, Colors.green.shade600]) : null,
+              gradient: isUnlocked ? AppColors.primaryGradient : null,
               color: isUnlocked ? null : Colors.grey.shade200,
             ),
             child: Center(
               child: Text(
-                level.toString(), 
+                level.toString(),
                 style: TextStyle(
-                  color: isUnlocked ? Colors.white : Colors.grey.shade500, 
-                  fontSize: 22, 
-                  fontWeight: FontWeight.bold
-                )
-              )
+                  color: isUnlocked ? Colors.white : Colors.grey.shade500,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
 
           // Quà VIP
-          Expanded(
-            child: _buildRewardItem(vipRewardName, vipImage, vipIconFallback, isUnlocked && isVip, false),
-          ),
+          Expanded(child: _buildRewardItem(vipRewardName, vipImage, vipIconFallback, isUnlocked && isVip, false)),
         ],
       ),
     );
@@ -244,16 +293,26 @@ class _BattlePassScreenState extends State<BattlePassScreen> {
             height: 36,
             child: Image.asset(
               imagePath,
-              errorBuilder: (context, error, stackTrace) => Icon(fallbackIcon, color: isFree ? Colors.blue.shade300 : Colors.amber.shade600, size: 28),
+              errorBuilder: (context, error, stackTrace) =>
+                  Icon(fallbackIcon, color: isFree ? AppColors.accent : AppColors.primary, size: 28),
             ),
           ),
           const SizedBox(height: 4),
-          Text(name, style: TextStyle(color: Colors.grey.shade800, fontSize: 12, fontWeight: FontWeight.bold), textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis),
+          Text(
+            name,
+            style: TextStyle(color: Colors.grey.shade800, fontSize: 12, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
           if (isUnlocked)
             Padding(
               padding: const EdgeInsets.only(top: 2),
-              child: Text("ĐÃ NHẬN", style: TextStyle(color: Colors.green.shade600, fontSize: 9, fontWeight: FontWeight.bold)),
-            )
+              child: const Text(
+                "ĐÃ NHẬN",
+                style: TextStyle(color: AppColors.primary, fontSize: 9, fontWeight: FontWeight.bold),
+              ),
+            ),
         ],
       ),
     );

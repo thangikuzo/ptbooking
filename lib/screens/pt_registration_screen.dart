@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+import '../constants/app_colors.dart';
 import 'splash_screen.dart';
 import 'package:ptbooking/services/wallet_service.dart';
 
@@ -70,7 +71,10 @@ class _PTRegistrationScreenState extends State<PTRegistrationScreen> {
 
     if (_certImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Vui lòng tải lên ít nhất 1 ảnh Bằng cấp / Chứng chỉ!"), backgroundColor: Colors.red),
+        const SnackBar(
+          content: Text("Vui lòng tải lên ít nhất 1 ảnh Bằng cấp / Chứng chỉ!"),
+          backgroundColor: Colors.red,
+        ),
       );
       return;
     }
@@ -101,7 +105,7 @@ class _PTRegistrationScreenState extends State<PTRegistrationScreen> {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => const SplashScreen()),
-                (route) => false,
+            (route) => false,
           );
         }
       }
@@ -114,7 +118,7 @@ class _PTRegistrationScreenState extends State<PTRegistrationScreen> {
     setState(() => _isLoading = false);
   }
 
-    // Hiển thị số dư ví hiện có
+  // Hiển thị số dư ví hiện có
   Widget _buildBalance() {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return const SizedBox();
@@ -126,17 +130,19 @@ class _PTRegistrationScreenState extends State<PTRegistrationScreen> {
         final formatted = '${balance.toString().replaceAllMapped(RegExp(r'\\B(?=(\\d{3})+(?!\\d))'), (m) => '.')}đ';
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Text('Số dư hiện có: $formatted',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF2E3B55))),
+          child: Text(
+            'Số dư hiện có: $formatted',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+          ),
         );
       },
     );
   }
 
-@override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Cập nhật nền trắng
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text("Đăng ký làm PT"),
         actions: [
@@ -150,15 +156,20 @@ class _PTRegistrationScreenState extends State<PTRegistrationScreen> {
                 final balance = raw is int
                     ? raw
                     : raw is double
-                        ? raw.toInt()
-                        : int.tryParse(raw.toString()) ?? 0;
-                final formatted = '${balance.toString().replaceAllMapped(RegExp(r'\\B(?=(\\d{3})+(?!\\d))'), (m) => '.')}đ';
-                return Text('Số dư: $formatted', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white));
+                    ? raw.toInt()
+                    : int.tryParse(raw.toString()) ?? 0;
+                final formatted =
+                    '${balance.toString().replaceAllMapped(RegExp(r'\\B(?=(\\d{3})+(?!\\d))'), (m) => '.')}đ';
+                return Text(
+                  'Số dư: $formatted',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+                );
               },
             ),
           ),
         ],
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: AppColors.surface,
+        foregroundColor: AppColors.primaryDark,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24), // Tăng padding lên 24 cho thoáng
@@ -167,19 +178,26 @@ class _PTRegistrationScreenState extends State<PTRegistrationScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text("Điền thông tin chuyên môn", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF2E3B55))),
+              const Text(
+                "Điền thông tin chuyên môn",
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+              ),
               _buildBalance(),
-                const SizedBox(height: 10),
-              const Text("Hồ sơ của bạn sẽ được Admin xét duyệt trước khi bạn có thể bắt đầu nhận học viên.", style: TextStyle(color: Colors.grey)),
+              const SizedBox(height: 10),
+              const Text(
+                "Hồ sơ của bạn sẽ được Admin xét duyệt trước khi bạn có thể bắt đầu nhận học viên.",
+                style: TextStyle(color: Colors.grey),
+              ),
               const SizedBox(height: 30),
 
               TextFormField(
                 controller: _experienceController,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
-                    labelText: "Số năm kinh nghiệm",
-                    prefixIcon: const Icon(Icons.star_border),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+                  labelText: "Số năm kinh nghiệm",
+                  prefixIcon: const Icon(Icons.star_border),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
                 validator: (val) => val!.isEmpty ? "Vui lòng nhập số năm kinh nghiệm" : null,
               ),
               const SizedBox(height: 16),
@@ -187,9 +205,10 @@ class _PTRegistrationScreenState extends State<PTRegistrationScreen> {
               TextFormField(
                 controller: _specialtyController,
                 decoration: InputDecoration(
-                    labelText: "Chuyên môn (Ví dụ: Gym, Yoga, Boxing)",
-                    prefixIcon: const Icon(Icons.fitness_center),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+                  labelText: "Chuyên môn (Ví dụ: Gym, Yoga, Boxing)",
+                  prefixIcon: const Icon(Icons.fitness_center),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
                 validator: (val) => val!.isEmpty ? "Vui lòng nhập chuyên môn" : null,
               ),
               const SizedBox(height: 16),
@@ -198,18 +217,22 @@ class _PTRegistrationScreenState extends State<PTRegistrationScreen> {
                 controller: _bioController,
                 maxLines: 4,
                 decoration: InputDecoration(
-                    labelText: "Giới thiệu bản thân & Thành tích",
-                    alignLabelWithHint: true,
-                    prefixIcon: const Padding(
-                      padding: EdgeInsets.only(bottom: 50), // Đẩy icon lên trên
-                      child: Icon(Icons.description_outlined),
-                    ),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+                  labelText: "Giới thiệu bản thân & Thành tích",
+                  alignLabelWithHint: true,
+                  prefixIcon: const Padding(
+                    padding: EdgeInsets.only(bottom: 50), // Đẩy icon lên trên
+                    child: Icon(Icons.description_outlined),
+                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
                 validator: (val) => val!.isEmpty ? "Vui lòng viết vài dòng giới thiệu" : null,
               ),
               const SizedBox(height: 30),
 
-              const Text("Hồ sơ đính kèm", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF2E3B55))),
+              const Text(
+                "Hồ sơ đính kèm",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+              ),
               const SizedBox(height: 16),
 
               _buildImagePicker("Bằng cấp / Chứng chỉ (Bắt buộc)", _certImage, () => _pickImage('cert')),
@@ -220,14 +243,17 @@ class _PTRegistrationScreenState extends State<PTRegistrationScreen> {
               ElevatedButton(
                 onPressed: _isLoading ? null : _submitApplication,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFCA311),
+                  backgroundColor: AppColors.primary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text("GỬI HỒ SƠ XÉT DUYỆT", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-              )
+                    : const Text(
+                        "GỬI HỒ SƠ XÉT DUYỆT",
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+              ),
             ],
           ),
         ),
@@ -247,21 +273,24 @@ class _PTRegistrationScreenState extends State<PTRegistrationScreen> {
         ),
         child: imageFile != null
             ? ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: Image.file(imageFile, fit: BoxFit.cover, width: double.infinity),
-        )
+                borderRadius: BorderRadius.circular(14),
+                child: Image.file(imageFile, fit: BoxFit.cover, width: double.infinity),
+              )
             : Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), shape: BoxShape.circle),
-              child: const Icon(Icons.cloud_upload_outlined, size: 30, color: Colors.blue),
-            ),
-            const SizedBox(height: 12),
-            Text(title, style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.w600, fontSize: 13)),
-          ],
-        ),
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), shape: BoxShape.circle),
+                    child: const Icon(Icons.cloud_upload_outlined, size: 30, color: Colors.blue),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    title,
+                    style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.w600, fontSize: 13),
+                  ),
+                ],
+              ),
       ),
     );
   }

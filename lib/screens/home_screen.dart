@@ -58,12 +58,36 @@ class _HomeScreenState extends State<HomeScreen> {
   // 🔥 MẢNG DANH MỤC ĐỂ ĐỔ UI VÀ BẮT SỰ KIỆN LỌC
   final List<Map<String, dynamic>> _categories = [
     {'name': 'Tất cả', 'icon': Icons.grid_view_rounded, 'keywords': <String>[]},
-    {'name': 'Gym', 'icon': Icons.fitness_center, 'keywords': ['gym', 'tăng cơ', 'bodybuilding', 'strength']},
-    {'name': 'Giảm cân', 'icon': Icons.local_fire_department, 'keywords': ['giảm cân', 'fat loss', 'cardio', 'dinh dưỡng']},
-    {'name': 'Yoga', 'icon': Icons.self_improvement, 'keywords': ['yoga', 'stretching', 'thiền']},
-    {'name': 'Boxing', 'icon': Icons.sports_mma, 'keywords': ['boxing', 'kickboxing', 'mma']},
-    {'name': 'Pilates', 'icon': Icons.accessibility_new, 'keywords': ['pilates', 'core', 'phục hồi']},
-    {'name': 'Crossfit', 'icon': Icons.timer, 'keywords': ['crossfit', 'hiit', 'conditioning']},
+    {
+      'name': 'Gym',
+      'icon': Icons.fitness_center,
+      'keywords': ['gym', 'tăng cơ', 'bodybuilding', 'strength'],
+    },
+    {
+      'name': 'Giảm cân',
+      'icon': Icons.local_fire_department,
+      'keywords': ['giảm cân', 'fat loss', 'cardio', 'dinh dưỡng'],
+    },
+    {
+      'name': 'Yoga',
+      'icon': Icons.self_improvement,
+      'keywords': ['yoga', 'stretching', 'thiền'],
+    },
+    {
+      'name': 'Boxing',
+      'icon': Icons.sports_mma,
+      'keywords': ['boxing', 'kickboxing', 'mma'],
+    },
+    {
+      'name': 'Pilates',
+      'icon': Icons.accessibility_new,
+      'keywords': ['pilates', 'core', 'phục hồi'],
+    },
+    {
+      'name': 'Crossfit',
+      'icon': Icons.timer,
+      'keywords': ['crossfit', 'hiit', 'conditioning'],
+    },
   ];
 
   @override
@@ -125,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: ClipOval(
                   child: (_currentUser?.photoURL != null && _currentUser!.photoURL!.isNotEmpty)
                       ? Image.network(_currentUser!.photoURL!, fit: BoxFit.cover)
-                      : const Icon(Icons.person, color: Color(0xFF18253E)),
+                      : const Icon(Icons.person, color: Color(0xFF0B2447)),
                 ),
               ),
               const SizedBox(width: 12),
@@ -134,24 +158,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Text(
                     "Xin chào, $_userName!",
-                    style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF18253E)),
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0B2447)),
                   ),
-                  Text(
-                    "Tìm PT phù hợp ngay",
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-                  ),
+                  Text("Tìm PT phù hợp ngay", style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
                 ],
               ),
             ],
           ),
           IconButton(
             onPressed: () {},
-            icon: const Icon(Icons.notifications_none_rounded, color: Color(0xFF18253E)),
+            icon: const Icon(Icons.notifications_none_rounded, color: Color(0xFF0B2447)),
             style: IconButton.styleFrom(backgroundColor: Colors.white),
-          )
+          ),
         ],
       ),
     );
@@ -172,10 +190,7 @@ class _HomeScreenState extends State<HomeScreen> {
           prefixIcon: const Icon(Icons.search, color: Colors.grey),
           filled: true,
           fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: BorderSide.none,
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
           contentPadding: const EdgeInsets.symmetric(vertical: 15),
         ),
       ),
@@ -212,16 +227,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final keywords = List<String>.from(selectedCategory['keywords'] as List);
 
     return pts.where((pt) {
-      final searchableText = _normalizeText([
-        pt.name,
-        pt.specialty ?? '',
-        pt.bio ?? '',
-        pt.experience ?? '',
-      ].join(' '));
+      final searchableText = _normalizeText([pt.name, pt.specialty ?? '', pt.bio ?? '', pt.experience ?? ''].join(' '));
 
       final matchesSearch = query.isEmpty || searchableText.contains(query);
-      final matchesCategory = keywords.isEmpty ||
-          keywords.any((keyword) => searchableText.contains(_normalizeText(keyword)));
+      final matchesCategory =
+          keywords.isEmpty || keywords.any((keyword) => searchableText.contains(_normalizeText(keyword)));
 
       return matchesSearch && matchesCategory;
     }).toList();
@@ -232,19 +242,18 @@ class _HomeScreenState extends State<HomeScreen> {
       margin: const EdgeInsets.all(20),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF18253E),
+        color: const Color(0xFF0B2447),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: const Color(0xFF18253E).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5))],
+        boxShadow: [
+          BoxShadow(color: const Color(0xFF0B2447).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5)),
+        ],
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.calendar_today, color: Color(0xFFFFA515), size: 20),
+            decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+            child: const Icon(Icons.calendar_today, color: Color(0xFF4BA3E3), size: 20),
           ),
           const SizedBox(width: 12),
           const Expanded(
@@ -252,7 +261,10 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text("Buổi tập tiếp theo", style: TextStyle(color: Color(0xFF98A5C4), fontSize: 12)),
-                Text("18:00 - Hôm nay với PT Minh Quân", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                Text(
+                  "18:00 - Hôm nay với PT Minh Quân",
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
               ],
             ),
           ),
@@ -270,16 +282,19 @@ class _HomeScreenState extends State<HomeScreen> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         gradient: const LinearGradient(
-          colors: [Color(0xFFFFA515), Color(0xFFFFC25C)],
+          colors: [Color(0xFF4BA3E3), Color(0xFF90CAF9)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        boxShadow: [BoxShadow(color: const Color(0xFFFFA515).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5))],
+        boxShadow: [
+          BoxShadow(color: const Color(0xFF4BA3E3).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5)),
+        ],
       ),
       child: Stack(
         children: [
           Positioned(
-            right: -20, bottom: -20,
+            right: -20,
+            bottom: -20,
             child: Icon(Icons.fitness_center, size: 140, color: Colors.white.withOpacity(0.3)),
           ),
           Padding(
@@ -300,15 +315,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   onPressed: () {},
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFF18253E),
+                    foregroundColor: const Color(0xFF0B2447),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   ),
                   child: const Text("Nhận ưu đãi ngay", style: TextStyle(fontWeight: FontWeight.bold)),
-                )
+                ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
@@ -341,15 +356,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     height: 60,
                     decoration: BoxDecoration(
                       // Nếu được chọn -> đổi sang nền Xanh Navy đậm, ngược lại nền trắng
-                      color: isSelected ? const Color(0xFF18253E) : Colors.white,
+                      color: isSelected ? const Color(0xFF0B2447) : Colors.white,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: isSelected ? const Color(0xFF18253E) : const Color(0xFFE1E3E4)),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, 2))],
+                      border: Border.all(color: isSelected ? const Color(0xFF0B2447) : const Color(0xFFE1E3E4)),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, 2)),
+                      ],
                     ),
                     child: Icon(
                       cat['icon'] as IconData,
                       // Nếu được chọn -> đổi icon sang màu trắng tinh khôi
-                      color: isSelected ? Colors.white : const Color(0xFF18253E),
+                      color: isSelected ? Colors.white : const Color(0xFF0B2447),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -358,7 +375,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: isSelected ? const Color(0xFFFFA515) : const Color(0xFF18253E), // Chọn thì chữ màu cam rực rỡ
+                      color: isSelected
+                          ? const Color(0xFF4BA3E3)
+                          : const Color(0xFF0B2447), // Chọn thì chữ màu cam rực rỡ
                     ),
                   ),
                 ],
@@ -376,11 +395,17 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF18253E))),
+          Text(
+            title,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0B2447)),
+          ),
           if (showAction)
             TextButton(
               onPressed: () {},
-              child: const Text("Xem tất cả", style: TextStyle(color: Color(0xFFFFA515), fontWeight: FontWeight.bold)),
+              child: const Text(
+                "Xem tất cả",
+                style: TextStyle(color: Color(0xFF4BA3E3), fontWeight: FontWeight.bold),
+              ),
             ),
         ],
       ),
@@ -412,7 +437,10 @@ class _HomeScreenState extends State<HomeScreen> {
           // Trường hợp lọc xong không có ông PT nào khớp
           if (pts.isEmpty) {
             return const Center(
-              child: Text("Không tìm thấy HLV phù hợp.", style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey)),
+              child: Text(
+                "Không tìm thấy HLV phù hợp.",
+                style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey),
+              ),
             );
           }
 
@@ -449,16 +477,26 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Stack(
                           children: [
                             (pt.avatar != null && pt.avatar!.isNotEmpty)
-                                ? Image.network(pt.avatar!, height: 160, width: double.infinity, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _buildErrorImage())
+                                ? Image.network(
+                                    pt.avatar!,
+                                    height: 160,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => _buildErrorImage(),
+                                  )
                                 : _buildErrorImage(),
                             Positioned(
-                              top: 10, right: 10,
+                              top: 10,
+                              right: 10,
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(color: Colors.white.withOpacity(0.9), borderRadius: BorderRadius.circular(8)),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.9),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                                 child: _buildPTCardRating(pt.uid), // 🔥 ĐÃ THAY BẰNG HÀM ĐẾM SAO REAL-TIME
                               ),
-                            )
+                            ),
                           ],
                         ),
                       ),
@@ -467,12 +505,30 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(pt.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF18253E))),
+                            Text(
+                              pt.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Color(0xFF0B2447),
+                              ),
+                            ),
                             const SizedBox(height: 4),
-                            Text(pt.specialty ?? "Huấn luyện viên", maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF855300), fontSize: 12, fontWeight: FontWeight.bold)),
+                            Text(
+                              pt.specialty ?? "Huấn luyện viên",
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Color(0xFF855300),
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ],
                         ),
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -484,7 +540,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-// 🔥 TIỂU COMPONENT: TỰ ĐỘNG ĐẾM SAO TRUNG BÌNH NGOÀI HOME
+  // 🔥 TIỂU COMPONENT: TỰ ĐỘNG ĐẾM SAO TRUNG BÌNH NGOÀI HOME
   Widget _buildPTCardRating(String ptUid) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection('reviews').where('pt_id', isEqualTo: ptUid).snapshots(),
@@ -496,7 +552,10 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Icon(Icons.star_border, color: Colors.grey, size: 14), // Đổi thành sao rỗng xám
               SizedBox(width: 4),
-              Text("0.0", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey)),
+              Text(
+                "0.0",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey),
+              ),
             ],
           );
         }
@@ -512,11 +571,11 @@ class _HomeScreenState extends State<HomeScreen> {
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.star, color: Color(0xFFFFA515), size: 14), // Có điểm thì sao vàng cam
+            const Icon(Icons.star, color: Color(0xFF4BA3E3), size: 14), // Có điểm thì sao vàng cam
             const SizedBox(width: 4),
             Text(
               avgRating.toStringAsFixed(1),
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF18253E)),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF0B2447)),
             ),
           ],
         );
@@ -526,7 +585,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildErrorImage() {
     return Container(
-      height: 160, width: double.infinity, color: Colors.grey[200],
+      height: 160,
+      width: double.infinity,
+      color: Colors.grey[200],
       child: const Icon(Icons.person, size: 60, color: Colors.grey),
     );
   }
@@ -551,7 +612,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
-                  width: 60, height: 60, color: Colors.grey[200],
+                  width: 60,
+                  height: 60,
+                  color: Colors.grey[200],
                   child: const Icon(Icons.person, color: Colors.grey),
                 ),
               ),
@@ -560,16 +623,25 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(index == 0 ? "Phan Anh" : "Trần Long", style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF18253E))),
-                    Text(index == 0 ? "Chuyên gia Pilates • 5 năm" : "Giảm cân • Dinh dưỡng", style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                    Text(
+                      index == 0 ? "Phan Anh" : "Trần Long",
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0B2447)),
+                    ),
+                    Text(
+                      index == 0 ? "Chuyên gia Pilates • 5 năm" : "Giảm cân • Dinh dưỡng",
+                      style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                    ),
                   ],
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(color: const Color(0xFFFFDDB8), borderRadius: BorderRadius.circular(20)),
-                child: const Text("NEW", style: TextStyle(color: Color(0xFF653E00), fontSize: 10, fontWeight: FontWeight.bold)),
-              )
+                child: const Text(
+                  "NEW",
+                  style: TextStyle(color: Color(0xFF653E00), fontSize: 10, fontWeight: FontWeight.bold),
+                ),
+              ),
             ],
           ),
         );

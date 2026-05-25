@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../constants/app_colors.dart';
 
 class PTScheduleScreen extends StatefulWidget {
   const PTScheduleScreen({super.key});
@@ -14,19 +15,38 @@ class _PTScheduleScreenState extends State<PTScheduleScreen> {
 
   // Các khung giờ mặc định để chọn
   final List<String> _timeSlots = [
-    "08:00", "09:00", "10:00", "11:00",
-    "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"
+    "08:00",
+    "09:00",
+    "10:00",
+    "11:00",
+    "14:00",
+    "15:00",
+    "16:00",
+    "17:00",
+    "18:00",
+    "19:00",
+    "20:00",
   ];
 
   // Map lưu trữ các khung giờ đã chọn cho từng thứ
   Map<String, List<String>> _selectedAvailability = {
-    'monday': [], 'tuesday': [], 'wednesday': [],
-    'thursday': [], 'friday': [], 'saturday': [], 'sunday': [],
+    'monday': [],
+    'tuesday': [],
+    'wednesday': [],
+    'thursday': [],
+    'friday': [],
+    'saturday': [],
+    'sunday': [],
   };
 
   final Map<String, String> _dayLabels = {
-    'monday': 'Thứ 2', 'tuesday': 'Thứ 3', 'wednesday': 'Thứ 4',
-    'thursday': 'Thứ 5', 'friday': 'Thứ 6', 'saturday': 'Thứ 7', 'sunday': 'Chủ Nhật',
+    'monday': 'Thứ 2',
+    'tuesday': 'Thứ 3',
+    'wednesday': 'Thứ 4',
+    'thursday': 'Thứ 5',
+    'friday': 'Thứ 6',
+    'saturday': 'Thứ 7',
+    'sunday': 'Chủ Nhật',
   };
 
   @override
@@ -56,9 +76,9 @@ class _PTScheduleScreenState extends State<PTScheduleScreen> {
     // --- THÊM ĐOẠN CHECK NULL NÀY VÀO ---
     if (user == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Lỗi: Chưa đăng nhập!"), backgroundColor: Colors.red),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Lỗi: Chưa đăng nhập!"), backgroundColor: Colors.red));
       }
       return;
     }
@@ -73,15 +93,16 @@ class _PTScheduleScreenState extends State<PTScheduleScreen> {
       }, SetOptions(merge: true));
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Đã lưu lịch làm việc!"), backgroundColor: Colors.green),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Đã lưu lịch làm việc!"), backgroundColor: Colors.green));
       }
     } catch (e) {
       print("Lỗi lưu lịch: $e");
     }
     setState(() => _isLoading = false);
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -90,9 +111,14 @@ class _PTScheduleScreenState extends State<PTScheduleScreen> {
 
         actions: [
           if (_isLoading)
-            const Center(child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator(color: Colors.white)))
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: CircularProgressIndicator(color: Colors.white),
+              ),
+            )
           else
-            IconButton(onPressed: _saveSchedule, icon: const Icon(Icons.save))
+            IconButton(onPressed: _saveSchedule, icon: const Icon(Icons.save)),
         ],
       ),
       body: ListView(
@@ -119,8 +145,8 @@ class _PTScheduleScreenState extends State<PTScheduleScreen> {
             return FilterChip(
               label: Text(slot),
               selected: isSelected,
-              selectedColor: Colors.orangeAccent.withOpacity(0.3),
-              checkmarkColor: Colors.orange,
+              selectedColor: AppColors.primaryLight,
+              checkmarkColor: AppColors.primary,
               onSelected: (bool selected) {
                 setState(() {
                   if (selected) {

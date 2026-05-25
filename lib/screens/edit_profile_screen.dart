@@ -134,19 +134,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         }
 
         // 3. Đẩy đúng cái Map này lên, Firebase sẽ CHỈ sửa những dòng này, CÒN LẠI GIỮ NGUYÊN
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(firebaseUser.uid)
-            .update(updateData);
+        await FirebaseFirestore.instance.collection('users').doc(firebaseUser.uid).update(updateData);
 
         await firebaseUser.updateDisplayName(_nameController.text.trim());
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Cập nhật hồ sơ thành công!"), backgroundColor: Colors.green));
-          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const SplashScreen()), (route) => false);
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text("Cập nhật hồ sơ thành công!"), backgroundColor: Colors.green));
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const SplashScreen()),
+            (route) => false,
+          );
         }
       } catch (e) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Lỗi: $e"), backgroundColor: Colors.red));
+        if (mounted)
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Lỗi: $e"), backgroundColor: Colors.red));
       }
     }
     setState(() => _isLoading = false);
@@ -156,57 +160,74 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(title: const Text("Chỉnh sửa hồ sơ"), backgroundColor: const Color(0xFF2E3B55)),
+      appBar: AppBar(title: const Text("Chỉnh sửa hồ sơ"), backgroundColor: const Color(0xFF0B2447)),
       body: _isFetching
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              _buildAvatarSection(),
-              const SizedBox(height: 32),
-              _buildTextField(controller: _nameController, label: "Họ và tên", icon: Icons.person_outline),
-              const SizedBox(height: 16),
-              _buildTextField(controller: _phoneController, label: "Số điện thoại", icon: Icons.phone_outlined, keyboardType: TextInputType.phone),
-              const SizedBox(height: 16),
-              _buildGenderAgeRow(),
-              const SizedBox(height: 16),
-              _buildBodyMetricsRow(),
-              const SizedBox(height: 16),
-              _buildTextField(controller: _addressController, label: "Địa chỉ", icon: Icons.location_on_outlined),
-
-              if (_userRole == 'PT') ...[
-                const SizedBox(height: 24),
-                const Divider(thickness: 1),
-                const SizedBox(height: 16),
-                const Text("Thông tin Huấn luyện viên", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF2E3B55))),
-                const SizedBox(height: 16),
-                _buildTextField(controller: _specialtyController, label: "Chuyên môn (VD: Gym, Yoga...)", icon: Icons.fitness_center),
-                const SizedBox(height: 16),
-                _buildTextField(controller: _experienceController, label: "Số năm kinh nghiệm", icon: Icons.star_border, keyboardType: TextInputType.number),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _bioController,
-                  maxLines: 3,
-                  decoration: InputDecoration(
-                    labelText: "Giới thiệu bản thân",
-                    alignLabelWithHint: true,
-                    prefixIcon: const Padding(
-                      padding: EdgeInsets.only(bottom: 30), // Đẩy icon lên trên cùng
-                      child: Icon(Icons.description_outlined),
+              padding: const EdgeInsets.all(24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    _buildAvatarSection(),
+                    const SizedBox(height: 32),
+                    _buildTextField(controller: _nameController, label: "Họ và tên", icon: Icons.person_outline),
+                    const SizedBox(height: 16),
+                    _buildTextField(
+                      controller: _phoneController,
+                      label: "Số điện thoại",
+                      icon: Icons.phone_outlined,
+                      keyboardType: TextInputType.phone,
                     ),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
+                    const SizedBox(height: 16),
+                    _buildGenderAgeRow(),
+                    const SizedBox(height: 16),
+                    _buildBodyMetricsRow(),
+                    const SizedBox(height: 16),
+                    _buildTextField(controller: _addressController, label: "Địa chỉ", icon: Icons.location_on_outlined),
+
+                    if (_userRole == 'PT') ...[
+                      const SizedBox(height: 24),
+                      const Divider(thickness: 1),
+                      const SizedBox(height: 16),
+                      const Text(
+                        "Thông tin Huấn luyện viên",
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0B2447)),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        controller: _specialtyController,
+                        label: "Chuyên môn (VD: Gym, Yoga...)",
+                        icon: Icons.fitness_center,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        controller: _experienceController,
+                        label: "Số năm kinh nghiệm",
+                        icon: Icons.star_border,
+                        keyboardType: TextInputType.number,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _bioController,
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          labelText: "Giới thiệu bản thân",
+                          alignLabelWithHint: true,
+                          prefixIcon: const Padding(
+                            padding: EdgeInsets.only(bottom: 30), // Đẩy icon lên trên cùng
+                            child: Icon(Icons.description_outlined),
+                          ),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 40),
+                    _buildSaveButton(),
+                  ],
                 ),
-              ],
-              const SizedBox(height: 40),
-              _buildSaveButton(),
-            ],
-          ),
-        ),
-      ),
+              ),
+            ),
     );
   }
 
@@ -227,31 +248,31 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   backgroundImage: _imageFile != null
                       ? FileImage(_imageFile!) as ImageProvider
                       : (_avatarUrl != null && _avatarUrl!.isNotEmpty)
-                          ? NetworkImage(_avatarUrl!)
-                          : null,
+                      ? NetworkImage(_avatarUrl!)
+                      : null,
                   child: (_imageFile == null && (_avatarUrl == null || _avatarUrl!.isEmpty))
                       ? const Icon(Icons.person, size: 50, color: Colors.grey)
                       : null,
                 ),
               ),
               // Frame Avatar (Khung viền bao quanh)
-                if (_selectedFrame != null && _selectedFrame!.isNotEmpty)
-                  SizedBox(
-                    width: 140,
-                    height: 140,
-                    child: Image.asset(
-                      _selectedFrame!.replaceAll('.jpg', '.png'),
-                      fit: BoxFit.contain,
-                      errorBuilder: (c, e, s) => const SizedBox.shrink(),
-                    ),
+              if (_selectedFrame != null && _selectedFrame!.isNotEmpty)
+                SizedBox(
+                  width: 140,
+                  height: 140,
+                  child: Image.asset(
+                    _selectedFrame!.replaceAll('.jpg', '.png'),
+                    fit: BoxFit.contain,
+                    errorBuilder: (c, e, s) => const SizedBox.shrink(),
                   ),
+                ),
               // Camera Icon Overlay
               Positioned(
                 bottom: 12,
                 right: 12,
                 child: Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: const BoxDecoration(color: Color(0xFFFCA311), shape: BoxShape.circle),
+                  decoration: const BoxDecoration(color: Color(0xFF4BA3E3), shape: BoxShape.circle),
                   child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
                 ),
               ),
@@ -265,7 +286,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             _loadCurrentData(); // Reload data when returning
           },
           icon: const Icon(Icons.shopping_bag, color: Colors.green),
-          label: const Text("Túi Đồ (Đổi khung Avatar)", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+          label: const Text(
+            "Túi Đồ (Đổi khung Avatar)",
+            style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+          ),
         ),
       ],
     );
@@ -277,13 +301,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         Expanded(
           child: DropdownButtonFormField<String>(
             value: _selectedGender,
-            decoration: InputDecoration(labelText: "Giới tính", prefixIcon: const Icon(Icons.wc), border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+            decoration: InputDecoration(
+              labelText: "Giới tính",
+              prefixIcon: const Icon(Icons.wc),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
             items: ['Nam', 'Nữ', 'Khác'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
             onChanged: (val) => setState(() => _selectedGender = val!),
           ),
         ),
         const SizedBox(width: 16),
-        Expanded(child: _buildTextField(controller: _ageController, label: "Tuổi", icon: Icons.cake_outlined, keyboardType: TextInputType.number)),
+        Expanded(
+          child: _buildTextField(
+            controller: _ageController,
+            label: "Tuổi",
+            icon: Icons.cake_outlined,
+            keyboardType: TextInputType.number,
+          ),
+        ),
       ],
     );
   }
@@ -291,28 +326,61 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget _buildBodyMetricsRow() {
     return Row(
       children: [
-        Expanded(child: _buildTextField(controller: _heightController, label: "Cao (cm)", icon: Icons.height, keyboardType: TextInputType.number)),
+        Expanded(
+          child: _buildTextField(
+            controller: _heightController,
+            label: "Cao (cm)",
+            icon: Icons.height,
+            keyboardType: TextInputType.number,
+          ),
+        ),
         const SizedBox(width: 16),
-        Expanded(child: _buildTextField(controller: _weightController, label: "Nặng (kg)", icon: Icons.monitor_weight_outlined, keyboardType: TextInputType.number)),
+        Expanded(
+          child: _buildTextField(
+            controller: _weightController,
+            label: "Nặng (kg)",
+            icon: Icons.monitor_weight_outlined,
+            keyboardType: TextInputType.number,
+          ),
+        ),
       ],
     );
   }
 
   Widget _buildSaveButton() {
     return SizedBox(
-      width: double.infinity, height: 50,
+      width: double.infinity,
+      height: 50,
       child: ElevatedButton(
         onPressed: _isLoading ? null : _saveProfile,
-        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2E3B55), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-        child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text("LƯU THAY ĐỔI", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF0B2447),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        child: _isLoading
+            ? const CircularProgressIndicator(color: Colors.white)
+            : const Text(
+                "LƯU THAY ĐỔI",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
       ),
     );
   }
 
-  Widget _buildTextField({required TextEditingController controller, required String label, required IconData icon, TextInputType keyboardType = TextInputType.text}) {
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
     return TextFormField(
-      controller: controller, keyboardType: keyboardType,
-      decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon), border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+      controller: controller,
+      keyboardType: keyboardType,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      ),
     );
   }
 }

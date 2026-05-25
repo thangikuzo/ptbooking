@@ -24,16 +24,13 @@ class ChatListScreen extends StatelessWidget {
     final User? currentUser = FirebaseAuth.instance.currentUser;
 
     if (currentUser == null) {
-      return const Scaffold(
-        body: Center(child: Text("Vui lòng đăng nhập")),
-      );
+      return const Scaffold(body: Center(child: Text("Vui lòng đăng nhập")));
     }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Text("Tin nhắn", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-
       ),
       body: Column(
         children: [
@@ -42,17 +39,14 @@ class ChatListScreen extends StatelessWidget {
           // =========================================================
           GestureDetector(
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AIChatScreen()),
-              );
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const AIChatScreen()));
             },
             child: Container(
               margin: const EdgeInsets.fromLTRB(14, 16, 14, 8),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF2E3B55), Color(0xFF1E2937)],
+                  colors: [Color(0xFF0B2447), Color(0xFF0B2447)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -78,10 +72,7 @@ class ChatListScreen extends StatelessWidget {
                           style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                         SizedBox(height: 4),
-                        Text(
-                          "Hỏi đáp giáo án, dinh dưỡng...",
-                          style: TextStyle(color: Colors.white70, fontSize: 13),
-                        ),
+                        Text("Hỏi đáp giáo án, dinh dưỡng...", style: TextStyle(color: Colors.white70, fontSize: 13)),
                       ],
                     ),
                   ),
@@ -96,7 +87,15 @@ class ChatListScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 4.0),
             child: Row(
               children: [
-                Text("TIN NHẮN VỚI PT", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[600], letterSpacing: 0.5)),
+                Text(
+                  "TIN NHẮN VỚI PT",
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[600],
+                    letterSpacing: 0.5,
+                  ),
+                ),
                 const SizedBox(width: 8),
                 Expanded(child: Divider(color: Colors.grey[300], thickness: 1)),
               ],
@@ -114,7 +113,7 @@ class ChatListScreen extends StatelessWidget {
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator(color: Color(0xFFFCA311)));
+                  return const Center(child: CircularProgressIndicator(color: Color(0xFF4BA3E3)));
                 }
 
                 final docs = snapshot.data?.docs ?? [];
@@ -126,7 +125,10 @@ class ChatListScreen extends StatelessWidget {
                       children: [
                         Icon(Icons.chat_bubble_outline_rounded, size: 60, color: Colors.grey[300]),
                         const SizedBox(height: 16),
-                        Text("Bạn chưa có cuộc trò chuyện nào.", style: TextStyle(color: Colors.grey[500], fontSize: 15)),
+                        Text(
+                          "Bạn chưa có cuộc trò chuyện nào.",
+                          style: TextStyle(color: Colors.grey[500], fontSize: 15),
+                        ),
                       ],
                     ),
                   );
@@ -160,10 +162,10 @@ class ChatListScreen extends StatelessWidget {
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         leading: CircleAvatar(
                           radius: 26,
-                          backgroundColor: const Color(0xFF2E3B55).withOpacity(0.1),
+                          backgroundColor: const Color(0xFF0B2447).withOpacity(0.1),
                           child: Text(
                             chatRoom.ptName.isNotEmpty ? chatRoom.ptName[0].toUpperCase() : 'P',
-                            style: const TextStyle(color: Color(0xFF2E3B55), fontWeight: FontWeight.bold, fontSize: 18),
+                            style: const TextStyle(color: Color(0xFF0B2447), fontWeight: FontWeight.bold, fontSize: 18),
                           ),
                         ),
                         title: Row(
@@ -171,7 +173,11 @@ class ChatListScreen extends StatelessWidget {
                           children: [
                             Text(
                               chatRoom.ptName,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1E2937)),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Color(0xFF0B2447),
+                              ),
                             ),
                             if (timeAgo.isNotEmpty)
                               Text(
@@ -195,12 +201,7 @@ class ChatListScreen extends StatelessWidget {
                         ),
                         trailing: Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.grey[400]),
                         onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ChatScreen(chatId: chatRoom.id),
-                            ),
-                          );
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(chatId: chatRoom.id)));
                         },
                       ),
                     );

@@ -12,17 +12,12 @@ class StudentProgressScreen extends StatelessWidget {
     final currentUser = FirebaseAuth.instance.currentUser;
 
     if (currentUser == null) {
-      return const Scaffold(
-        body: Center(child: Text("Vui lòng đăng nhập")),
-      );
+      return const Scaffold(body: Center(child: Text("Vui lòng đăng nhập")));
     }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7FB),
-      appBar: AppBar(
-        title: const Text("Đánh giá tiến độ học viên"),
-        backgroundColor: const Color(0xFF2E3B55),
-      ),
+      appBar: AppBar(title: const Text("Đánh giá tiến độ học viên"), backgroundColor: const Color(0xFF0B2447)),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('bookings')
@@ -37,9 +32,7 @@ class StudentProgressScreen extends StatelessWidget {
           final docs = snapshot.data?.docs ?? [];
 
           if (docs.isEmpty) {
-            return const Center(
-              child: Text("Chưa có học viên nào để đánh giá."),
-            );
+            return const Center(child: Text("Chưa có học viên nào để đánh giá."));
           }
 
           final Map<String, Map<String, dynamic>> students = {};
@@ -89,10 +82,7 @@ class StudentProgressScreen extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
       child: Row(
         children: [
           CircleAvatar(
@@ -104,18 +94,9 @@ class StudentProgressScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                Text(name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 4),
-                Text(
-                  "$totalSessions buổi đã đăng ký",
-                  style: const TextStyle(color: Colors.grey),
-                ),
+                Text("$totalSessions buổi đã đăng ký", style: const TextStyle(color: Colors.grey)),
               ],
             ),
           ),
@@ -124,21 +105,12 @@ class StudentProgressScreen extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => StudentProgressDetailScreen(
-                    studentId: studentId,
-                    studentName: name,
-                    ptId: ptId,
-                  ),
+                  builder: (_) => StudentProgressDetailScreen(studentId: studentId, studentName: name, ptId: ptId),
                 ),
               );
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFCA311),
-            ),
-            child: const Text(
-              "Đánh giá",
-              style: TextStyle(color: Colors.white),
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4BA3E3)),
+            child: const Text("Đánh giá", style: TextStyle(color: Colors.white)),
           ),
         ],
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../constants/app_colors.dart';
 import '../services/auth_service.dart';
 import '../widgets/main_wrapper.dart';
 import 'login_screen.dart';
@@ -30,18 +31,12 @@ class _SplashScreenState extends State<SplashScreen> {
       // Đã đăng nhập -> Lấy Role -> Vào App
       String? role = await _authService.getUserRole();
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => MainWrapper(userRole: role ?? 'User')),
-        );
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => MainWrapper(userRole: role ?? 'User')));
       }
     } else {
       // Chưa đăng nhập -> Ra màn hình Login
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-        );
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
       }
     }
   }
@@ -49,7 +44,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF2E3B55), // Màu xanh chủ đạo
+      backgroundColor: AppColors.primaryDark,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -57,11 +52,11 @@ class _SplashScreenState extends State<SplashScreen> {
             Icon(Icons.fitness_center, size: 100, color: Colors.white),
             SizedBox(height: 20),
             Text(
-                "PT BOOKING",
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 2)
+              "PT BOOKING",
+              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 2),
             ),
             SizedBox(height: 40),
-            CircularProgressIndicator(color: Colors.orangeAccent), // Vòng xoay loading
+            CircularProgressIndicator(color: Colors.white),
           ],
         ),
       ),

@@ -80,7 +80,7 @@ class PTTeachingScheduleScreen extends StatelessWidget {
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: Color(0xFFFCA311)));
+            return const Center(child: CircularProgressIndicator(color: Color(0xFF4BA3E3)));
           }
 
           final docs = snapshot.data?.docs ?? [];
@@ -180,7 +180,7 @@ class PTTeachingScheduleScreen extends StatelessWidget {
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 17,
-                                    color: Color(0xFF1E2937),
+                                    color: Color(0xFF0B2447),
                                   ),
                                 ),
                                 if (firstBooking.packageName.isNotEmpty) ...[

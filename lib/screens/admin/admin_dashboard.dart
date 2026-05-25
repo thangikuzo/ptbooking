@@ -1,21 +1,23 @@
 // lib/screens/admin/admin_dashboard.dart
 import 'package:flutter/material.dart';
+import '../../constants/app_colors.dart';
 import 'tabs/pending_pt_tab.dart';
 import 'tabs/pt_list_tab.dart';
 import 'tabs/user_list_tab.dart';
 import 'tabs/booking_list_tab.dart';
+import 'tabs/revenue_tab.dart';
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
 
   @override
   Widget build(BuildContext context) {
-    const Color primary = Color(0xFF1E2937);     // Xanh đen sâu
-    const Color accent = Color(0xFFF97316);      // Cam nổi bật hơn
-    const Color bg = Color(0xFFF8FAFC);
+    const Color primary = AppColors.primaryDark;
+    const Color accent = AppColors.primary;
+    const Color bg = AppColors.background;
 
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: Scaffold(
         backgroundColor: bg,
         body: SafeArea(
@@ -27,11 +29,7 @@ class AdminDashboard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 2)),
                   ],
                 ),
                 child: Row(
@@ -39,7 +37,7 @@ class AdminDashboard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: primary.withOpacity(0.08),
+                        color: primary.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(Icons.shield_outlined, color: primary, size: 32),
@@ -59,11 +57,7 @@ class AdminDashboard extends StatelessWidget {
                         ),
                         Text(
                           "Quản trị viên hệ thống",
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey[600],
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style: TextStyle(fontSize: 13, color: Colors.grey[600], fontWeight: FontWeight.w500),
                         ),
                       ],
                     ),
@@ -89,31 +83,26 @@ class AdminDashboard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(30),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.06),
+                        color: Colors.black.withValues(alpha: 0.06),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
                     ],
                   ),
                   child: TabBar(
-                    isScrollable: false,
+                    isScrollable: true,
                     dividerColor: Colors.transparent,
-                    unselectedLabelColor: primary.withOpacity(0.7),
+                    unselectedLabelColor: primary.withValues(alpha: 0.7),
                     labelColor: Colors.white,
-                    labelStyle: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13.5,
-                    ),
-                    indicator: BoxDecoration(
-                      color: accent,
-                      borderRadius: BorderRadius.circular(30),
-                    ),
+                    labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5),
+                    indicator: BoxDecoration(color: accent, borderRadius: BorderRadius.circular(30)),
                     indicatorPadding: EdgeInsets.zero,
                     tabs: const [
                       Tab(text: "HỒ SƠ MỚI"),
                       Tab(text: "HLV (PT)"),
                       Tab(text: "HỌC VIÊN"),
                       Tab(text: "LỊCH ĐẶT"),
+                      Tab(text: "DOANH THU"),
                     ],
                   ),
                 ),
@@ -124,12 +113,7 @@ class AdminDashboard extends StatelessWidget {
               // ==================== TAB CONTENT ====================
               const Expanded(
                 child: TabBarView(
-                  children: [
-                    PendingPTTab(),
-                    PTListTab(),
-                    UserListTab(),
-                    BookingListTab(),
-                  ],
+                  children: [PendingPTTab(), PTListTab(), UserListTab(), BookingListTab(), RevenueTab()],
                 ),
               ),
             ],

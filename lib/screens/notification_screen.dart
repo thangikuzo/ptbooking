@@ -70,11 +70,14 @@ class NotificationScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Thông báo", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Thông báo",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF4CAF50), Color(0xFF81C784)],
+              colors: [Color(0xFF1D5D9B), Color(0xFF4BA3E3)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -111,7 +114,7 @@ class NotificationScreen extends StatelessWidget {
               String senderAvatar = data['senderAvatar'] ?? '';
               String message = data['message'] ?? '';
               bool isRead = data['isRead'] ?? true;
-              
+
               DateTime? createdAt;
               if (data['createdAt'] != null) {
                 createdAt = (data['createdAt'] as Timestamp).toDate();
@@ -135,14 +138,17 @@ class NotificationScreen extends StatelessWidget {
                           backgroundColor: _getColorForType(type),
                           child: Icon(_getIconForType(type), size: 12, color: Colors.white),
                         ),
-                      )
+                      ),
                     ],
                   ),
                   title: RichText(
                     text: TextSpan(
                       style: const TextStyle(color: Colors.black, fontSize: 14),
                       children: [
-                        TextSpan(text: senderName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        TextSpan(
+                          text: senderName,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
                         TextSpan(text: " $message"),
                       ],
                     ),
@@ -151,9 +157,7 @@ class NotificationScreen extends StatelessWidget {
                     createdAt != null ? _timeAgo(createdAt) : '',
                     style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                   ),
-                  trailing: !isRead 
-                    ? const CircleAvatar(radius: 4, backgroundColor: Colors.green) 
-                    : null,
+                  trailing: !isRead ? const CircleAvatar(radius: 4, backgroundColor: Colors.green) : null,
                 ),
               );
             },

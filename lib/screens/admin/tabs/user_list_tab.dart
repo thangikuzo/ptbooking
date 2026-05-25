@@ -22,7 +22,10 @@ class UserListTab extends StatelessWidget {
 
             return Card(
               child: ListTile(
-                leading: const CircleAvatar(backgroundColor: Color(0xFF2E3B55), child: Icon(Icons.person, color: Colors.white)),
+                leading: const CircleAvatar(
+                  backgroundColor: Color(0xFF0B2447),
+                  child: Icon(Icons.person, color: Colors.white),
+                ),
                 title: Text(data['name'] ?? 'Học viên ẩn danh', style: const TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: Text(data['email'] ?? ''),
                 trailing: IconButton(

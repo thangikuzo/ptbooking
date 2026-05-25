@@ -62,8 +62,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const primaryColor = Color(0xFF18253E);
-    const accentColor = Color(0xFFFFA515);
+    const primaryColor = Color(0xFF0B2447);
+    const accentColor = Color(0xFF4BA3E3);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -181,7 +181,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
             child: Text(
               value,
               textAlign: TextAlign.right,
-              style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF18253E)),
+              style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF0B2447)),
             ),
           ),
         ],

@@ -5,6 +5,7 @@ import 'package:video_player/video_player.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../constants/app_colors.dart';
 import '../models/challenge_model.dart';
 import '../services/auth_service.dart';
 import '../widgets/comment_bottom_sheet.dart';
@@ -83,7 +84,11 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
   Future<void> _fetchUserRole() async {
     try {
       String? role = await _authService.getUserRole();
-      if (mounted) setState(() { _currentUserRole = role; _isLoadingRole = false; });
+      if (mounted)
+        setState(() {
+          _currentUserRole = role;
+          _isLoadingRole = false;
+        });
     } catch (e) {
       if (mounted) setState(() => _isLoadingRole = false);
     }
@@ -92,7 +97,10 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
   Future<void> _checkJoinedStatus() async {
     User? currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
-    var doc = await FirebaseFirestore.instance.collection('challenge_participants').doc('${currentUser.uid}_${widget.challenge.id}').get();
+    var doc = await FirebaseFirestore.instance
+        .collection('challenge_participants')
+        .doc('${currentUser.uid}_${widget.challenge.id}')
+        .get();
     if (doc.exists && mounted) setState(() => _isJoined = true);
   }
 
@@ -111,16 +119,20 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
   Future<void> _toggleFollowPT() async {
     User? currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
-    
+
     DocumentReference userRef = FirebaseFirestore.instance.collection('users').doc(currentUser.uid);
     DocumentReference ptRef = FirebaseFirestore.instance.collection('users').doc(widget.challenge.creatorId);
 
     if (_isFollowingPT) {
-      await userRef.update({'following': FieldValue.arrayRemove([widget.challenge.creatorId])});
+      await userRef.update({
+        'following': FieldValue.arrayRemove([widget.challenge.creatorId]),
+      });
       await ptRef.update({'followerCount': FieldValue.increment(-1)});
       setState(() => _isFollowingPT = false);
     } else {
-      await userRef.update({'following': FieldValue.arrayUnion([widget.challenge.creatorId])});
+      await userRef.update({
+        'following': FieldValue.arrayUnion([widget.challenge.creatorId]),
+      });
       await ptRef.update({'followerCount': FieldValue.increment(1)});
       setState(() => _isFollowingPT = true);
 
@@ -133,16 +145,20 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
         avatar = (myDoc.data() as Map<String, dynamic>)['avatar'] ?? "";
       }
 
-      await FirebaseFirestore.instance.collection('users').doc(widget.challenge.creatorId).collection('notifications').add({
-        'type': 'follow',
-        'senderId': currentUser.uid,
-        'senderName': realName,
-        'senderAvatar': avatar,
-        'targetId': '',
-        'message': 'đã bắt đầu theo dõi bạn.',
-        'createdAt': FieldValue.serverTimestamp(),
-        'isRead': false,
-      });
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.challenge.creatorId)
+          .collection('notifications')
+          .add({
+            'type': 'follow',
+            'senderId': currentUser.uid,
+            'senderName': realName,
+            'senderAvatar': avatar,
+            'targetId': '',
+            'message': 'đã bắt đầu theo dõi bạn.',
+            'createdAt': FieldValue.serverTimestamp(),
+            'isRead': false,
+          });
     }
   }
 
@@ -159,9 +175,10 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
     User? currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
     setState(() => _isJoined = true);
-    await FirebaseFirestore.instance.collection('challenge_participants').doc('${currentUser.uid}_${widget.challenge.id}').set({
-      'userId': currentUser.uid, 'challengeId': widget.challenge.id, 'joinedAt': FieldValue.serverTimestamp(),
-    });
+    await FirebaseFirestore.instance
+        .collection('challenge_participants')
+        .doc('${currentUser.uid}_${widget.challenge.id}')
+        .set({'userId': currentUser.uid, 'challengeId': widget.challenge.id, 'joinedAt': FieldValue.serverTimestamp()});
   }
 
   Future<void> _loadSubmissionsFromFirebase() async {
@@ -190,19 +207,21 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
           foundMySubmission = true;
         }
 
-        loadedItems.add(SubmissionItem(
-          docId: doc.id,
-          userId: data['userId'] ?? '',
-          userName: data['userName'] ?? 'Học viên ẩn danh',
-          avatarUrl: data['avatarUrl'] ?? '',
-          videoUrl: data['videoUrl'],
-          score: data['score'] ?? 0,
-          status: data['status'] ?? 'Đang chờ duyệt',
-          timeString: timeStr,
-          controller: controller,
-          likedBy: List<String>.from(data['likedBy'] ?? []),
-          commentCount: data['commentCount'] as int? ?? 0,
-        ));
+        loadedItems.add(
+          SubmissionItem(
+            docId: doc.id,
+            userId: data['userId'] ?? '',
+            userName: data['userName'] ?? 'Học viên ẩn danh',
+            avatarUrl: data['avatarUrl'] ?? '',
+            videoUrl: data['videoUrl'],
+            score: data['score'] ?? 0,
+            status: data['status'] ?? 'Đang chờ duyệt',
+            timeString: timeStr,
+            controller: controller,
+            likedBy: List<String>.from(data['likedBy'] ?? []),
+            commentCount: data['commentCount'] as int? ?? 0,
+          ),
+        );
       }
 
       if (mounted) {
@@ -224,9 +243,11 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
     }
     User? currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
-    
+
     if (ownerId == currentUser.uid) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bạn không thể tự thả tim cho bài nộp của chính mình!')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Bạn không thể tự thả tim cho bài nộp của chính mình!')));
       return;
     }
 
@@ -234,10 +255,14 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
     DocumentReference docRef = FirebaseFirestore.instance.collection('submissions').doc(submissionId);
 
     if (isLiked) {
-      await docRef.update({'likedBy': FieldValue.arrayRemove([currentUser.uid])});
+      await docRef.update({
+        'likedBy': FieldValue.arrayRemove([currentUser.uid]),
+      });
     } else {
-      await docRef.update({'likedBy': FieldValue.arrayUnion([currentUser.uid])});
-      
+      await docRef.update({
+        'likedBy': FieldValue.arrayUnion([currentUser.uid]),
+      });
+
       // Tạo thông báo cho chủ video
       String realName = "Học viên";
       String avatar = "";
@@ -263,16 +288,22 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
 
   Future<void> _pickVideo() async {
     if (_isChallengeEnded()) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Thử thách đã kết thúc, không thể tải video lên nữa!')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Thử thách đã kết thúc, không thể tải video lên nữa!')));
       return;
     }
     if (_hasSubmitted || _isUploading) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bạn đã nộp bài hoặc đang trong quá trình tải lên!')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Bạn đã nộp bài hoặc đang trong quá trình tải lên!')));
       return;
     }
     final XFile? pickedFile = await _picker.pickVideo(source: ImageSource.gallery);
     if (pickedFile != null) {
-      setState(() { _isUploading = true; });
+      setState(() {
+        _isUploading = true;
+      });
       try {
         var uri = Uri.parse('https://api.cloudinary.com/v1_1/dkjq5ojmn/video/upload');
         var request = http.MultipartRequest('POST', uri);
@@ -311,37 +342,54 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
 
           await _loadSubmissionsFromFirebase();
           if (mounted) {
-            setState(() { _isUploading = false; });
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tải video lên thành công!'), backgroundColor: Colors.green));
+            setState(() {
+              _isUploading = false;
+            });
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('Tải video lên thành công!'), backgroundColor: Colors.green));
           }
         } else {
-          if (mounted) setState(() { _isUploading = false; });
+          if (mounted)
+            setState(() {
+              _isUploading = false;
+            });
         }
       } catch (e) {
-        if (mounted) setState(() { _isUploading = false; });
+        if (mounted)
+          setState(() {
+            _isUploading = false;
+          });
       }
     }
   }
 
   // --- HÀM XÓA VIDEO DÀNH CHO PT ---
   Future<void> _deleteSubmission(String docId) async {
-    bool confirm = await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Xác nhận xóa"),
-        content: const Text("Bạn có chắc chắn muốn xóa bài nộp này không?"),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("HỦY")),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("XÓA", style: TextStyle(color: Colors.red))),
-        ],
-      ),
-    ) ?? false;
+    bool confirm =
+        await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Xác nhận xóa"),
+            content: const Text("Bạn có chắc chắn muốn xóa bài nộp này không?"),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("HỦY")),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text("XÓA", style: TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
+        ) ??
+        false;
 
     if (confirm) {
       try {
         await FirebaseFirestore.instance.collection('submissions').doc(docId).delete();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã xóa video!'), backgroundColor: Colors.red));
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Đã xóa video!'), backgroundColor: Colors.red));
           _loadSubmissionsFromFirebase();
         }
       } catch (e) {}
@@ -367,7 +415,10 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      Text("$currentScore/10", style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                      Text(
+                        "$currentScore/10",
+                        style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -397,7 +448,10 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
             int totalScoreInt = ((scoreBienDo + scoreTuThe + scoreKiemSoat + scoreHoanThanh) / 4).round();
 
             return AlertDialog(
-              title: const Text("Chấm điểm Video", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+              title: const Text(
+                "Chấm điểm Video",
+                style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+              ),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -407,19 +461,36 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                     buildCriteriaRow("Biên độ", scoreBienDo, (val) => setStateDialog(() => scoreBienDo = val)),
                     buildCriteriaRow("Tư thế", scoreTuThe, (val) => setStateDialog(() => scoreTuThe = val)),
                     buildCriteriaRow("Kiểm soát", scoreKiemSoat, (val) => setStateDialog(() => scoreKiemSoat = val)),
-                    buildCriteriaRow("Mức độ hoàn thành", scoreHoanThanh, (val) => setStateDialog(() => scoreHoanThanh = val)),
+                    buildCriteriaRow(
+                      "Mức độ hoàn thành",
+                      scoreHoanThanh,
+                      (val) => setStateDialog(() => scoreHoanThanh = val),
+                    ),
                     const Divider(),
-                    Center(child: Text("Điểm trung bình: $totalScoreInt", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green))),
+                    Center(
+                      child: Text(
+                        "Điểm trung bình: $totalScoreInt",
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green),
+                      ),
+                    ),
                   ],
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(context), child: const Text("HỦY", style: TextStyle(color: Colors.grey))),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("HỦY", style: TextStyle(color: Colors.grey)),
+                ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                   onPressed: () async {
                     if (scoreBienDo == 0 || scoreTuThe == 0 || scoreKiemSoat == 0 || scoreHoanThanh == 0) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vui lòng chấm điểm tất cả tiêu chí!'), backgroundColor: Colors.red));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Vui lòng chấm điểm tất cả tiêu chí!'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
                       return;
                     }
                     Navigator.pop(context);
@@ -433,26 +504,28 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                         'scoreHoanThanh': scoreHoanThanh,
                         'status': 'Đã chấm',
                       });
-                      
+
                       if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Chấm điểm thành công!'), backgroundColor: Colors.green));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Chấm điểm thành công!'), backgroundColor: Colors.green),
+                        );
                         _loadSubmissionsFromFirebase();
                       }
                     } catch (e) {}
                   },
                   child: const Text("LƯU ĐIỂM", style: TextStyle(color: Colors.white)),
-                )
+                ),
               ],
             );
-          }
+          },
         );
-      }
+      },
     );
   }
 
   Future<void> _rateChallenge(int rating) async {
     setState(() => _userRating = rating);
-    
+
     // Cập nhật Firebase rating (logic đơn giản)
     DocumentReference ref = FirebaseFirestore.instance.collection('challenges').doc(widget.challenge.id);
     await FirebaseFirestore.instance.runTransaction((transaction) async {
@@ -460,39 +533,45 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
       if (!snapshot.exists) return;
       int currentCount = (snapshot.data() as Map<String, dynamic>)['ratingCount'] as int? ?? 0;
       double currentRating = (snapshot.data() as Map<String, dynamic>)['rating'] as double? ?? 0.0;
-      
+
       double newRating = ((currentRating * currentCount) + rating) / (currentCount + 1);
-      transaction.update(ref, {
-        'rating': newRating,
-        'ratingCount': currentCount + 1,
-      });
+      transaction.update(ref, {'rating': newRating, 'ratingCount': currentCount + 1});
     });
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cảm ơn bạn đã đánh giá!'), backgroundColor: Colors.green));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Cảm ơn bạn đã đánh giá!'), backgroundColor: Colors.green));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoadingRole || _isLoadingFeed && _feedItems.isEmpty) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator(color: Colors.amber)));
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      );
     }
 
     String timeRemaining = "Không giới hạn";
     if (widget.challenge.endTime != null) {
       Duration diff = widget.challenge.endTime!.toDate().difference(DateTime.now());
-      if (diff.isNegative) timeRemaining = "Đã kết thúc";
-      else timeRemaining = "Còn ${diff.inHours}h ${diff.inMinutes % 60}m";
+      if (diff.isNegative)
+        timeRemaining = "Đã kết thúc";
+      else
+        timeRemaining = "Còn ${diff.inHours}h ${diff.inMinutes % 60}m";
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.challenge.title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text(
+          widget.challenge.title,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF4CAF50), Color(0xFF81C784)],
+              colors: [Color(0xFF1D5D9B), Color(0xFF4BA3E3)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -507,7 +586,11 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: const Text("Phần thưởng Thử thách", textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+                  title: const Text(
+                    "Phần thưởng Thử thách",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary),
+                  ),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -523,7 +606,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text("Đóng", style: TextStyle(color: Colors.green)),
+                      child: const Text("Đóng", style: TextStyle(color: AppColors.primary)),
                     ),
                   ],
                 ),
@@ -536,25 +619,34 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
       body: ListView.builder(
         itemCount: 1 + (_isUploading ? 1 : 0) + _feedItems.length,
         itemBuilder: (context, index) {
-
           // HEADER
           if (index == 0) {
             return Container(
-              width: double.infinity, padding: const EdgeInsets.all(16.0), color: Colors.amber.shade50,
+              width: double.infinity,
+              padding: const EdgeInsets.all(16.0),
+              color: AppColors.primaryLight,
               child: Column(
                 children: [
-                  Image.network(widget.challenge.imageUrl, height: 120, fit: BoxFit.contain, errorBuilder: (c,e,s) => const Icon(Icons.broken_image, size: 100)),
+                  Image.network(
+                    widget.challenge.imageUrl,
+                    height: 120,
+                    fit: BoxFit.contain,
+                    errorBuilder: (c, e, s) => const Icon(Icons.broken_image, size: 100),
+                  ),
                   const SizedBox(height: 16),
 
                   Text(widget.challenge.description, style: const TextStyle(fontSize: 16), textAlign: TextAlign.center),
                   const SizedBox(height: 12),
-                  
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Icon(Icons.timer, color: Colors.red),
                       const SizedBox(width: 5),
-                      Text(timeRemaining, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
+                      Text(
+                        timeRemaining,
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -563,14 +655,28 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => LeaderboardScreen(challengeTitle: widget.challenge.id)));
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => LeaderboardScreen(challengeTitle: widget.challenge.id),
+                          ),
+                        );
                       },
-                      icon: const Icon(Icons.emoji_events, color: Colors.orange),
-                      label: const Text("XEM BẢNG XẾP HẠNG", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-                      style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.orange, width: 2), backgroundColor: Colors.white),
+                      icon: const Icon(Icons.emoji_events, color: AppColors.primary),
+                      label: const Text(
+                        "XEM BẢNG XẾP HẠNG",
+                        style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.primary, width: 2),
+                        backgroundColor: Colors.white,
+                      ),
                     ),
                   ),
-                  if (_currentUserRole == 'PT' && timeRemaining == "Đã kết thúc" && widget.challenge.creatorId == FirebaseAuth.instance.currentUser?.uid && !widget.challenge.isRewardsDistributed) ...[
+                  if (_currentUserRole == 'PT' &&
+                      timeRemaining == "Đã kết thúc" &&
+                      widget.challenge.creatorId == FirebaseAuth.instance.currentUser?.uid &&
+                      !widget.challenge.isRewardsDistributed) ...[
                     const SizedBox(height: 12),
                     SizedBox(
                       width: double.infinity,
@@ -578,7 +684,10 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                         onPressed: _distributeRewards,
                         icon: const Icon(Icons.card_giftcard),
                         label: const Text("TRAO THƯỞNG & KẾT THÚC", style: TextStyle(fontWeight: FontWeight.bold)),
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                        ),
                       ),
                     ),
                   ],
@@ -592,21 +701,35 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(color: Colors.green.shade100, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.green.shade700, width: 1)),
-                        child: Text('+${widget.challenge.points} EXP', style: TextStyle(color: Colors.green.shade800, fontWeight: FontWeight.bold, fontSize: 16)),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryLight,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: AppColors.primary, width: 1),
+                        ),
+                        child: Text(
+                          '+${widget.challenge.points} EXP',
+                          style: const TextStyle(
+                            color: AppColors.primaryDark,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
                       ),
                       if (_currentUserRole != 'PT' && widget.challenge.creatorId.isNotEmpty)
                         OutlinedButton.icon(
-                          icon: Icon(_isFollowingPT ? Icons.check : Icons.person_add, color: _isFollowingPT ? Colors.green : Colors.blue),
+                          icon: Icon(_isFollowingPT ? Icons.check : Icons.person_add, color: AppColors.primary),
                           label: Text(_isFollowingPT ? "Đang theo dõi PT" : "Theo dõi PT"),
                           onPressed: _toggleFollowPT,
                         ),
                       if (_currentUserRole != 'PT')
                         ElevatedButton(
-                          style: ElevatedButton.styleFrom(backgroundColor: _isJoined ? Colors.grey : Colors.green),
+                          style: ElevatedButton.styleFrom(backgroundColor: _isJoined ? Colors.grey : AppColors.primary),
                           onPressed: _isJoined ? null : _joinChallenge,
-                          child: Text(_isJoined ? "ĐÃ THAM GIA" : "THAM GIA", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                        )
+                          child: Text(
+                            _isJoined ? "ĐÃ THAM GIA" : "THAM GIA",
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                          ),
+                        ),
                     ],
                   ),
 
@@ -616,12 +739,15 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                     const Text("Đánh giá thử thách này", style: TextStyle(fontWeight: FontWeight.bold)),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(5, (i) => IconButton(
-                        icon: const Icon(Icons.star_border, color: Colors.amber, size: 30),
-                        onPressed: () => _rateChallenge(i + 1),
-                      )),
-                    )
-                  ]
+                      children: List.generate(
+                        5,
+                        (i) => IconButton(
+                          icon: const Icon(Icons.star_border, color: Colors.amber, size: 30),
+                          onPressed: () => _rateChallenge(i + 1),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             );
@@ -629,7 +755,10 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
 
           // VÒNG XOAY UPLOAD
           if (_isUploading && index == 1) {
-            return const Padding(padding: EdgeInsets.all(40.0), child: Center(child: CircularProgressIndicator(color: Colors.redAccent)));
+            return const Padding(
+              padding: EdgeInsets.all(40.0),
+              child: Center(child: CircularProgressIndicator(color: Colors.redAccent)),
+            );
           }
 
           // DANH SÁCH BÀI NỘP
@@ -637,10 +766,15 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
           if (videoIndex < 0 || videoIndex >= _feedItems.length) return const SizedBox.shrink();
           final item = _feedItems[videoIndex];
 
-          bool isLikedByMe = FirebaseAuth.instance.currentUser != null && item.likedBy.contains(FirebaseAuth.instance.currentUser!.uid);
+          bool isLikedByMe =
+              FirebaseAuth.instance.currentUser != null &&
+              item.likedBy.contains(FirebaseAuth.instance.currentUser!.uid);
 
           return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), elevation: 4, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), clipBehavior: Clip.antiAlias,
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            elevation: 4,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            clipBehavior: Clip.antiAlias,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -654,16 +788,26 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                   subtitle: Text(item.timeString),
                   trailing: _currentUserRole == 'PT'
                       ? PopupMenuButton<String>(
-                    onSelected: (value) {
-                      if (value == 'delete') _deleteSubmission(item.docId);
-                    },
-                    itemBuilder: (BuildContext context) => [
-                      const PopupMenuItem(value: 'delete', child: Row(children: [Icon(Icons.delete, color: Colors.red), SizedBox(width: 8), Text("Xóa video này", style: TextStyle(color: Colors.red))])),
-                    ],
-                  ) : null,
+                          onSelected: (value) {
+                            if (value == 'delete') _deleteSubmission(item.docId);
+                          },
+                          itemBuilder: (BuildContext context) => [
+                            const PopupMenuItem(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.delete, color: Colors.red),
+                                  SizedBox(width: 8),
+                                  Text("Xóa video này", style: TextStyle(color: Colors.red)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        )
+                      : null,
                 ),
                 AspectRatio(aspectRatio: item.controller.value.aspectRatio, child: VideoPlayer(item.controller)),
-                
+
                 // Nút Like, Comment
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -671,17 +815,21 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                     children: [
                       InkWell(
                         onTap: () => _toggleLike(item.docId, item.userId, item.likedBy),
-                        child: Row(children: [
-                          Icon(isLikedByMe ? Icons.favorite : Icons.favorite_border, color: Colors.red),
-                          const SizedBox(width: 5),
-                          Text("${item.likedBy.length}"),
-                        ]),
+                        child: Row(
+                          children: [
+                            Icon(isLikedByMe ? Icons.favorite : Icons.favorite_border, color: Colors.red),
+                            const SizedBox(width: 5),
+                            Text("${item.likedBy.length}"),
+                          ],
+                        ),
                       ),
                       const SizedBox(width: 20),
                       InkWell(
                         onTap: () {
                           if (_isChallengeEnded()) {
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Thử thách đã kết thúc, không thể bình luận!')));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Thử thách đã kết thúc, không thể bình luận!')),
+                            );
                             return;
                           }
                           showModalBottomSheet(
@@ -691,40 +839,55 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                             builder: (context) => CommentBottomSheet(submissionId: item.docId, ownerId: item.userId),
                           );
                         },
-                        child: Row(children: [
-                          const Icon(Icons.chat_bubble_outline),
-                          const SizedBox(width: 5),
-                          Text("${item.commentCount}"),
-                        ]),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.chat_bubble_outline),
+                            const SizedBox(width: 5),
+                            Text("${item.commentCount}"),
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ),
 
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), color: Colors.grey.shade50,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  color: Colors.grey.shade50,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.star_border_purple500, color: Colors.purple), const SizedBox(width: 8),
-                          Text("PT đánh giá: ", style: TextStyle(color: Colors.grey.shade700, fontStyle: FontStyle.italic)),
+                          const Icon(Icons.star_border_purple500, color: Colors.purple),
+                          const SizedBox(width: 8),
+                          Text(
+                            "PT đánh giá: ",
+                            style: TextStyle(color: Colors.grey.shade700, fontStyle: FontStyle.italic),
+                          ),
                           Text(
                             item.status == 'Đã chấm' ? '${item.score} Điểm' : item.status,
-                            style: TextStyle(fontWeight: FontWeight.bold, color: item.status == 'Đã chấm' ? Colors.green : Colors.orange),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: item.status == 'Đã chấm' ? Colors.green : Colors.orange,
+                            ),
                           ),
                         ],
                       ),
                       if (_currentUserRole == 'PT' && item.status != 'Đã chấm')
                         ElevatedButton(
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0), minimumSize: const Size(80, 36)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.amber,
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                            minimumSize: const Size(80, 36),
+                          ),
                           onPressed: () => _showGradingDialog(context, item.docId, item.userName),
                           child: const Text("CHẤM ĐIỂM", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                        )
+                        ),
                     ],
                   ),
-                )
+                ),
               ],
             ),
           );
@@ -732,21 +895,33 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
       ),
       bottomNavigationBar: (_currentUserRole != 'PT' && _isJoined)
           ? Container(
-        padding: const EdgeInsets.all(16), color: Colors.grey.shade200,
-        child: _hasSubmitted
-            ? ElevatedButton.icon(
-          onPressed: null,
-          icon: const Icon(Icons.check_circle),
-          label: const Text("BẠN ĐÃ NỘP BÀI", style: TextStyle(fontWeight: FontWeight.bold)),
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.grey, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-        )
-            : ElevatedButton.icon(
-          onPressed: timeRemaining == "Đã kết thúc" ? null : _pickVideo,
-          icon: const Icon(Icons.video_call),
-          label: Text(timeRemaining == "Đã kết thúc" ? "THỬ THÁCH ĐÃ ĐÓNG" : "TẢI VIDEO LÊN", style: const TextStyle(fontWeight: FontWeight.bold)),
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-        ),
-      )
+              padding: const EdgeInsets.all(16),
+              color: Colors.grey.shade200,
+              child: _hasSubmitted
+                  ? ElevatedButton.icon(
+                      onPressed: null,
+                      icon: const Icon(Icons.check_circle),
+                      label: const Text("BẠN ĐÃ NỘP BÀI", style: TextStyle(fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    )
+                  : ElevatedButton.icon(
+                      onPressed: timeRemaining == "Đã kết thúc" ? null : _pickVideo,
+                      icon: const Icon(Icons.video_call),
+                      label: Text(
+                        timeRemaining == "Đã kết thúc" ? "THỬ THÁCH ĐÃ ĐÓNG" : "TẢI VIDEO LÊN",
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+            )
           : const SizedBox.shrink(),
     );
   }
@@ -755,45 +930,57 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.green.shade50,
+        color: AppColors.primaryLight,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.green.shade200),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
-          Image.asset(imagePath, width: 40, height: 40, errorBuilder: (c, e, s) => const Icon(Icons.star, color: Colors.amber, size: 40)),
+          Image.asset(
+            imagePath,
+            width: 40,
+            height: 40,
+            errorBuilder: (c, e, s) => const Icon(Icons.star, color: Colors.amber, size: 40),
+          ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(rank, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                Text(description, style: TextStyle(color: Colors.green.shade700, fontSize: 13)),
+                Text(description, style: const TextStyle(color: AppColors.primary, fontSize: 13)),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
   }
 
   Future<void> _distributeRewards() async {
-    showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator(color: Colors.green)));
-    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+    );
+
     try {
-      var snapshot = await FirebaseFirestore.instance.collection('submissions').where('challengeId', isEqualTo: widget.challenge.id).get();
+      var snapshot = await FirebaseFirestore.instance
+          .collection('submissions')
+          .where('challengeId', isEqualTo: widget.challenge.id)
+          .get();
       List<Map<String, dynamic>> allItems = [];
       for (var doc in snapshot.docs) {
         var data = doc.data();
         List<dynamic> likedBy = data['likedBy'] ?? [];
         allItems.add({
-          'userId': data['userId'], 
+          'userId': data['userId'],
           'score': data['score'] ?? 0,
           'likes': likedBy.length,
-          'docRef': doc.reference
+          'docRef': doc.reference,
         });
       }
-      
+
       // Sắp xếp theo điểm, rồi đến likes
       allItems.sort((a, b) {
         int scoreCompare = (b['score'] as int).compareTo(a['score'] as int);
@@ -803,11 +990,12 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
 
       WriteBatch batch = FirebaseFirestore.instance.batch();
       GamificationService gamificationService = GamificationService();
-      
+
       int currentRank = 1;
-      
+
       DateTime endTime = widget.challenge.endTime?.toDate() ?? DateTime.now();
-      String timeString = "${endTime.day.toString().padLeft(2, '0')}/${endTime.month.toString().padLeft(2, '0')}/${endTime.year}";
+      String timeString =
+          "${endTime.day.toString().padLeft(2, '0')}/${endTime.month.toString().padLeft(2, '0')}/${endTime.year}";
 
       for (int i = 0; i < allItems.length; i++) {
         if (i > 0) {
@@ -815,24 +1003,34 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
             currentRank++;
           }
         }
-        
+
         if (currentRank > 3) break; // Chỉ thưởng Top 3
-        
+
         String userId = allItems[i]['userId'];
         int expReward = 0;
         int bpExpReward = 0;
         String? badgeReward;
-        
-        if (currentRank == 1) { expReward = GamificationConstants.EXP_TOP_1_SCORE; badgeReward = GamificationConstants.LEADERBOARD_BADGES[1]; bpExpReward = 20; }
-        else if (currentRank == 2) { expReward = GamificationConstants.EXP_TOP_2_SCORE; badgeReward = GamificationConstants.LEADERBOARD_BADGES[2]; bpExpReward = 10; }
-        else if (currentRank == 3) { expReward = GamificationConstants.EXP_TOP_3_SCORE; badgeReward = GamificationConstants.LEADERBOARD_BADGES[3]; bpExpReward = 5; }
+
+        if (currentRank == 1) {
+          expReward = GamificationConstants.EXP_TOP_1_SCORE;
+          badgeReward = GamificationConstants.LEADERBOARD_BADGES[1];
+          bpExpReward = 20;
+        } else if (currentRank == 2) {
+          expReward = GamificationConstants.EXP_TOP_2_SCORE;
+          badgeReward = GamificationConstants.LEADERBOARD_BADGES[2];
+          bpExpReward = 10;
+        } else if (currentRank == 3) {
+          expReward = GamificationConstants.EXP_TOP_3_SCORE;
+          badgeReward = GamificationConstants.LEADERBOARD_BADGES[3];
+          bpExpReward = 5;
+        }
 
         DocumentReference userRef = FirebaseFirestore.instance.collection('users').doc(userId);
-        
+
         batch.update(userRef, {
           'unlockedBadges': FieldValue.arrayUnion([
-            {"image": badgeReward, "challengeName": "${widget.challenge.title} ($timeString)"}
-          ])
+            {"image": badgeReward, "challengeName": "${widget.challenge.title} ($timeString)"},
+          ]),
         });
 
         // Kích hoạt logic lên cấp bằng GamificationService
@@ -848,12 +1046,14 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
       // Xóa thử thách
       DocumentReference challengeRef = FirebaseFirestore.instance.collection('challenges').doc(widget.challenge.id);
       batch.delete(challengeRef);
-      
+
       await batch.commit();
 
       if (mounted) {
         Navigator.pop(context); // Tắt loading
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã trao thưởng và xóa thử thách!'), backgroundColor: Colors.green));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đã trao thưởng và xóa thử thách!'), backgroundColor: Colors.green),
+        );
         Navigator.pop(context, true); // Thoát về màn hình trước
       }
     } catch (e) {

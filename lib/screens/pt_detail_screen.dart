@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../constants/app_colors.dart';
 import '../models/booking_model.dart';
 import '../models/review_model.dart'; // 🔥 KÉO FILE MODEL MỚI VÀO
 import '../services/booking_service.dart';
 import '../services/wallet_service.dart';
-
-
+import 'wallet_screen.dart';
 
 class PTDetailScreen extends StatefulWidget {
   final String ptUid;
@@ -57,9 +57,9 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
     {'name': 'Gói 36 buổi', 'desc': 'Tối ưu hình thể trọn vẹn', 'sessions': 36, 'price': 7900000},
   ];
 
-  final Color primaryColor = const Color(0xFF18253E);
-  final Color accentColor = const Color(0xFFFFA515);
-  final Color bgColor = const Color(0xFFF8F9FA);
+  final Color primaryColor = AppColors.primaryDark;
+  final Color accentColor = AppColors.accent;
+  final Color bgColor = AppColors.background;
 
   Map<String, dynamic>? get _selectedPackageData {
     if (_selectedPackage == null) return null;
@@ -73,6 +73,24 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
   String _formatCurrency(int amount) {
     if (amount <= 0) return 'Liên hệ admin';
     return '${amount.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => '.')}đ';
+  }
+
+  int _toInt(dynamic value) {
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  String _formatCompactCurrency(int amount) {
+    if (amount >= 1000000) {
+      final value = amount / 1000000;
+      final text = value == value.roundToDouble() ? value.toStringAsFixed(0) : value.toStringAsFixed(1);
+      return '${text}tr';
+    }
+    if (amount >= 1000) {
+      return '${(amount / 1000).round()}k';
+    }
+    return '$amountđ';
   }
 
   Future<void> _loadAvailableSlots(String dayName, DateTime date) async {
@@ -148,7 +166,7 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
                 child: Image.network(
                   url,
                   fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const Center(child: Text("Lỗi tải hình ảnh chứng chỉ")),
+                  errorBuilder: (context, error, stackTrace) => const Center(child: Text("Lỗi tải hình ảnh chứng chỉ")),
                 ),
               )
             : const SizedBox(
@@ -358,6 +376,7 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
 
     final confirmed = await _showBookingConfirmation();
     if (!confirmed) return;
+    if (!mounted) return;
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       ScaffoldMessenger.of(
@@ -406,8 +425,9 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
         Navigator.pop(context);
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Lỗi: $e"), backgroundColor: Colors.red));
+      }
     }
     if (mounted) setState(() => _isBooking = false);
   }
@@ -421,6 +441,51 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
     if (_selectedTimeSlot == null) return "CHỌN GIỜ TẬP";
     if (_selectedPackage == null) return "CHỌN GÓI TẬP";
     return "XÁC NHẬN ĐẶT LỊCH";
+  }
+
+  Widget _buildWalletBalanceChip() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 4),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(999),
+        onTap: () {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletScreen()));
+        },
+        child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+          stream: _walletService.watchWallet(user.uid),
+          builder: (context, snapshot) {
+            final balance = _toInt(snapshot.data?.data()?['balance']);
+
+            return Container(
+              height: 34,
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: accentColor.withValues(alpha: 0.45)),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 12, offset: const Offset(0, 4)),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.account_balance_wallet_outlined, color: accentColor, size: 16),
+                  const SizedBox(width: 5),
+                  Text(
+                    _formatCompactCurrency(balance),
+                    style: TextStyle(color: primaryColor, fontSize: 12, fontWeight: FontWeight.w800),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
   }
 
   Widget _buildTimeSlotPicker() {
@@ -469,7 +534,7 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.orange.withOpacity(0.4)),
+          border: Border.all(color: Colors.orange.withValues(alpha: 0.4)),
         ),
         child: Row(
           children: [
@@ -498,7 +563,7 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
             return ChoiceChip(
               label: Text(slot),
               selected: isSelected,
-              selectedColor: accentColor.withOpacity(0.18),
+              selectedColor: accentColor.withValues(alpha: 0.18),
               labelStyle: TextStyle(
                 color: isSelected ? primaryColor : Colors.grey[700],
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
@@ -535,23 +600,7 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
           style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 18),
         ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-              stream: _walletService.watchWallet(FirebaseAuth.instance.currentUser?.uid ?? ''),
-              builder: (context, snapshot) {
-                final data = snapshot.data?.data() ?? {};
-                final raw = data['balance'] ?? 0;
-                final balance = raw is int
-                    ? raw
-                    : raw is double
-                        ? raw.toInt()
-                        : int.tryParse(raw.toString()) ?? 0;
-                final formatted = '${balance.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (m) => '.')}đ';
-                return Text('Số dư: $formatted', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white));
-              },
-            ),
-          ),
+          _buildWalletBalanceChip(),
           IconButton(onPressed: () {}, icon: const Icon(Icons.favorite_border)),
         ],
       ),
@@ -572,7 +621,7 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
           // 2. Tự động tính Trung bình Sao
           double avgRating = 0.0;
           if (reviews.isNotEmpty) {
-            double totalStars = reviews.fold(0, (sum, item) => sum + item.rating);
+            double totalStars = reviews.fold<double>(0, (total, item) => total + item.rating);
             avgRating = totalStars / reviews.length;
           } else {
             avgRating = 0.0;
@@ -592,7 +641,11 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
                     borderRadius: BorderRadius.circular(24),
                     color: Colors.grey[300],
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 15, offset: const Offset(0, 10)),
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 15,
+                        offset: const Offset(0, 10),
+                      ),
                     ],
                     image: (avatar.isNotEmpty) ? DecorationImage(image: NetworkImage(avatar), fit: BoxFit.cover) : null,
                   ),
@@ -610,7 +663,7 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
                             gradient: LinearGradient(
                               begin: Alignment.bottomCenter,
                               end: Alignment.topCenter,
-                              colors: [primaryColor.withOpacity(0.95), Colors.transparent],
+                              colors: [primaryColor.withValues(alpha: 0.95), Colors.transparent],
                             ),
                           ),
                         ),
@@ -632,9 +685,9 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(0.4),
+                                    color: Colors.black.withValues(alpha: 0.4),
                                     borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: accentColor.withOpacity(0.5)),
+                                    border: Border.all(color: accentColor.withValues(alpha: 0.5)),
                                   ),
                                   child: Text(
                                     specialty,
@@ -678,10 +731,10 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: accentColor.withOpacity(0.3), width: 1),
+                              border: Border.all(color: accentColor.withValues(alpha: 0.3), width: 1),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.03),
+                                  color: Colors.black.withValues(alpha: 0.03),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),
@@ -745,7 +798,7 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
                               color: _selectedDate == null ? Colors.grey.shade200 : accentColor,
                               width: _selectedDate == null ? 1 : 1.5,
                             ),
-                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
+                            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)],
                           ),
                           child: Row(
                             children: [
@@ -804,7 +857,7 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
                                   color: isSelected ? accentColor : Colors.grey.shade200,
                                   width: isSelected ? 2 : 1,
                                 ),
-                                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 5)],
+                                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 5)],
                               ),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -861,7 +914,9 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
         decoration: BoxDecoration(
           color: Colors.white,
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, -5))],
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, -5)),
+          ],
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: ElevatedButton(
@@ -891,7 +946,9 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
+          ],
         ),
         child: Column(
           children: [
@@ -944,62 +1001,57 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
               ),
             )
           else
-            ...reviews
-                .map(
-                  (review) => Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+            ...reviews.map(
+              (review) => Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Row(
+                        CircleAvatar(
+                          radius: 18,
+                          backgroundColor: Colors.grey[200],
+                          backgroundImage: review.userAvatar.isNotEmpty ? NetworkImage(review.userAvatar) : null,
+                          child: review.userAvatar.isEmpty
+                              ? const Icon(Icons.person, color: Colors.grey, size: 20)
+                              : null,
+                        ),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            CircleAvatar(
-                              radius: 18,
-                              backgroundColor: Colors.grey[200],
-                              backgroundImage: review.userAvatar.isNotEmpty ? NetworkImage(review.userAvatar) : null,
-                              child: review.userAvatar.isEmpty
-                                  ? const Icon(Icons.person, color: Colors.grey, size: 20)
-                                  : null,
-                            ),
-                            const SizedBox(width: 12),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  review.userName,
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                            Text(review.userName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                            const SizedBox(height: 2),
+                            Row(
+                              // Hiển thị sao thật của user đó
+                              children: List.generate(
+                                5,
+                                (index) => Icon(
+                                  index < review.rating ? Icons.star : Icons.star_border,
+                                  color: Colors.amber,
+                                  size: 14,
                                 ),
-                                const SizedBox(height: 2),
-                                Row(
-                                  // Hiển thị sao thật của user đó
-                                  children: List.generate(
-                                    5,
-                                    (index) => Icon(
-                                      index < review.rating ? Icons.star : Icons.star_border,
-                                      color: Colors.amber,
-                                      size: 14,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
-                        Text(review.content, style: TextStyle(color: Colors.grey[700], fontSize: 13, height: 1.5)),
                       ],
                     ),
-                  ),
-                )
-                .toList(),
+                    const SizedBox(height: 12),
+                    Text(review.content, style: TextStyle(color: Colors.grey[700], fontSize: 13, height: 1.5)),
+                  ],
+                ),
+              ),
+            ),
         ],
       ),
     );
