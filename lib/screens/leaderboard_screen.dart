@@ -11,7 +11,8 @@ class LeaderboardScreen extends StatefulWidget {
 }
 
 class _LeaderboardScreenState extends State<LeaderboardScreen> {
-  List<Map<String, dynamic>> _rankedUsers = [];
+  List<Map<String, dynamic>> _scoreRanked = [];
+  List<Map<String, dynamic>> _likeRanked = [];
   bool _isLoading = true;
 
   @override
@@ -22,103 +23,188 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
   Future<void> _fetchAndSortLeaderboard() async {
     try {
-      // 1. Chỉ lấy những bài nộp của Thử thách này
       var snapshot = await FirebaseFirestore.instance
           .collection('submissions')
-          .where('challengeId', isEqualTo: widget.challengeTitle)
+          .where('challengeId', isEqualTo: widget.challengeTitle) // challengeTitle thực chất đang chứa ID
           .get();
+      var docs = snapshot.docs;
 
-      // 2. LỌC BẰNG DART: Lấy ra những bài ĐÃ CHẤM ĐIỂM
-      var gradedDocs = snapshot.docs
-          .map((doc) => doc.data())
-          .where((data) => data['status'] == 'Đã chấm')
-          .toList();
+      List<Map<String, dynamic>> allItems = [];
+      for (var doc in docs) {
+        var data = doc.data();
+        allItems.add({
+          'userName': data['userName'] ?? 'Ẩn danh',
+          'avatarUrl': data['avatarUrl'] ?? '',
+          'score': data['score'] ?? 0,
+          'likeCount': (data['likedBy'] as List?)?.length ?? 0,
+        });
+      }
 
-      // 3. SẮP XẾP BẰNG DART: Điểm từ Cao xuống Thấp
-      gradedDocs.sort((a, b) {
-        int scoreA = a['score'] ?? 0;
-        int scoreB = b['score'] ?? 0;
-        return scoreB.compareTo(scoreA); // Đảo ngược B lên trước A để xếp giảm dần
-      });
+      // Clone và sort cho Chuyên môn (score)
+      List<Map<String, dynamic>> byScore = List.from(allItems);
+      byScore.sort((a, b) => (b['score'] as int).compareTo(a['score'] as int));
+
+      // Clone và sort cho Yêu thích (likes)
+      List<Map<String, dynamic>> byLikes = List.from(allItems);
+      byLikes.sort((a, b) => (b['likeCount'] as int).compareTo(a['likeCount'] as int));
 
       if (mounted) {
         setState(() {
-          _rankedUsers = gradedDocs;
+          _scoreRanked = byScore;
+          _likeRanked = byLikes;
           _isLoading = false;
         });
       }
     } catch (e) {
-      debugPrint("Lỗi Leaderboard: $e");
+      debugPrint("Lỗi tải Leaderboard: $e");
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  // Hàm chọn màu Huy chương
-  Color _getMedalColor(int index) {
-    if (index == 0) return Colors.amber; // Vàng
-    if (index == 1) return Colors.grey.shade400; // Bạc
-    if (index == 2) return Colors.brown.shade300; // Đồng
-    return Colors.blue.shade100; // Khuyến khích
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey.shade100,
-      appBar: AppBar(
-        title: const Text("Bảng Xếp Hạng", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.amber.shade400,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("BẢNG XẾP HẠNG", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+          centerTitle: true,
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF4CAF50), Color(0xFF81C784)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+          ),
+          iconTheme: const IconThemeData(color: Colors.white),
+          bottom: const TabBar(
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
+            indicatorColor: Colors.amber,
+            indicatorWeight: 4,
+            tabs: [
+              Tab(icon: Icon(Icons.star), text: "Chuyên môn"),
+              Tab(icon: Icon(Icons.favorite), text: "Yêu thích"),
+            ],
+          ),
+        ),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator(color: Colors.green))
+            : TabBarView(
+                children: [
+                  _buildRankList(_scoreRanked, isScoreRank: true),
+                  _buildRankList(_likeRanked, isScoreRank: false),
+                ],
+              ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _rankedUsers.isEmpty
-          ? const Center(child: Text("Chưa có ai được chấm điểm!", style: TextStyle(fontSize: 16, color: Colors.grey)))
-          : ListView.builder(
+    );
+  }
+
+  Widget _buildRankList(List<Map<String, dynamic>> list, {required bool isScoreRank}) {
+    if (list.isEmpty) {
+      return const Center(child: Text("Chưa có ai tham gia thử thách này."));
+    }
+
+    return Container(
+      color: const Color(0xFFF1F8F5), // Nền xanh nhạt
+      child: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: _rankedUsers.length,
+        itemCount: list.length,
         itemBuilder: (context, index) {
-          var data = _rankedUsers[index];
-          bool isTop3 = index < 3;
+          var item = list[index];
+          int rank = index + 1;
+          
+          Color rankColor;
+          IconData rankIcon;
+          
+          if (rank == 1) { rankColor = Colors.amber; rankIcon = Icons.emoji_events; }
+          else if (rank == 2) { rankColor = Colors.grey.shade400; rankIcon = Icons.military_tech; }
+          else if (rank == 3) { rankColor = Colors.orange.shade300; rankIcon = Icons.military_tech; }
+          else { rankColor = Colors.green.shade100; rankIcon = Icons.star_border; }
+
+          // Logic tính phần thưởng Gamification
+          int expReward = 0;
+          if (rank == 1) expReward = 50;
+          else if (rank == 2) expReward = 30;
+          else if (rank == 3) expReward = 10;
+          
+          // Tab yêu thích chỉ được 1 nửa thưởng
+          if (!isScoreRank) {
+            expReward = (expReward / 2).floor();
+          }
 
           return Card(
-            elevation: isTop3 ? 4 : 1, // Top 3 thì nổi bật hơn
             margin: const EdgeInsets.only(bottom: 12),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
-              side: isTop3 ? BorderSide(color: _getMedalColor(index), width: 2) : BorderSide.none,
+              side: BorderSide(color: rank <= 3 ? rankColor : Colors.transparent, width: 2),
             ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              leading: Stack(
-                alignment: Alignment.bottomRight,
+            elevation: rank <= 3 ? 4 : 1,
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
                 children: [
-                  CircleAvatar(
-                    radius: 24,
-                    backgroundColor: Colors.grey.shade200,
-                    backgroundImage: (data['avatarUrl'] != null && data['avatarUrl'].toString().isNotEmpty)
-                        ? NetworkImage(data['avatarUrl'])
-                        : null,
-                    child: (data['avatarUrl'] == null || data['avatarUrl'].toString().isEmpty)
-                        ? const Icon(Icons.person, color: Colors.grey)
-                        : null,
+                  // Thứ hạng
+                  SizedBox(
+                    width: 40,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(rankIcon, color: rank <= 3 ? rankColor : Colors.green.shade300, size: rank == 1 ? 32 : 28),
+                        Text("#$rank", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: rank <= 3 ? rankColor : Colors.grey.shade700)),
+                      ],
+                    ),
                   ),
-                  // Gắn số Hạng (1, 2, 3...)
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(color: _getMedalColor(index), shape: BoxShape.circle),
-                    child: Text('${index + 1}', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 12),
+                  
+                  // Avatar
+                  CircleAvatar(
+                    radius: 25,
+                    backgroundColor: Colors.green.shade50,
+                    backgroundImage: item['avatarUrl'] != '' ? NetworkImage(item['avatarUrl']) : null,
+                    child: item['avatarUrl'] == '' ? const Icon(Icons.person, color: Colors.green) : null,
+                  ),
+                  const SizedBox(width: 16),
+                  
+                  // Tên + Quà
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(item['userName'], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        if (expReward > 0)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.card_giftcard, size: 12, color: Colors.green),
+                                const SizedBox(width: 4),
+                                Text("+$expReward EXP", style: const TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          )
+                      ],
+                    ),
+                  ),
+                  
+                  // Chỉ số
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        isScoreRank ? "${item['score']} điểm" : "${item['likeCount']} tim",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: isScoreRank ? Colors.amber.shade700 : Colors.red,
+                          fontSize: 16,
+                        ),
+                      ),
+                      if (isScoreRank && item['score'] == 0)
+                        const Text("(Chưa chấm)", style: TextStyle(fontSize: 10, color: Colors.grey)),
+                    ],
                   )
-                ],
-              ),
-              title: Text(data['userName'] ?? 'Ẩn danh', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              subtitle: const Text("Hoàn thành xuất sắc"),
-              trailing: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('${data['score']}', style: TextStyle(color: _getMedalColor(index), fontSize: 22, fontWeight: FontWeight.bold)),
-                  const Text('Điểm', style: TextStyle(fontSize: 12, color: Colors.grey)),
                 ],
               ),
             ),

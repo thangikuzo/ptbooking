@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/user_model.dart';
 import 'pt_detail_screen.dart';
+import '../services/gamification_service.dart';
+import '../widgets/daily_reward_dialog.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,6 +14,34 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final GamificationService _gamificationService = GamificationService();
+
+  @override
+  void initState() {
+    super.initState();
+    _checkDailyLogin();
+  }
+
+  Future<void> _checkDailyLogin() async {
+    User? currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      bool receivedReward = await _gamificationService.checkDailyLogin(currentUser.uid);
+      if (receivedReward && mounted) {
+        // Lấy thông tin user để xem chuỗi (tùy chọn, hoặc gọi nhanh để lấy dữ liệu mới)
+        DocumentSnapshot doc = await FirebaseFirestore.instance.collection('users').doc(currentUser.uid).get();
+        if (doc.exists) {
+          int streak = (doc.data() as Map<String, dynamic>)['loginStreak'] as int? ?? 1;
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return DailyRewardDialog(streak: streak);
+            },
+          );
+        }
+      }
+    }
+  }
+
   final User? _currentUser = FirebaseAuth.instance.currentUser;
 
   // 🔥 TRẠNG THÁI LỌC CHUYÊN MÔN (Mặc định hiển thị Tất cả)
