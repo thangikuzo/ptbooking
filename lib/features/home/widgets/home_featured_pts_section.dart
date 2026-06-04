@@ -151,6 +151,7 @@ class HomeFeaturedPTsSection extends StatelessWidget {
                                     height: 160,
                                     width: double.infinity,
                                     fit: BoxFit.cover,
+                                    alignment: Alignment.topCenter,
                                     errorBuilder: (_, __, ___) => _buildErrorImage(),
                                   )
                                 : _buildErrorImage(),

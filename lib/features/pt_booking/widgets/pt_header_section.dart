@@ -35,7 +35,7 @@ class PTHeaderSection extends StatelessWidget {
             offset: const Offset(0, 10),
           ),
         ],
-        image: (avatar.isNotEmpty) ? DecorationImage(image: NetworkImage(avatar), fit: BoxFit.cover) : null,
+        image: (avatar.isNotEmpty) ? DecorationImage(image: NetworkImage(avatar), fit: BoxFit.cover, alignment: Alignment.topCenter) : null,
       ),
       child: Stack(
         children: [
