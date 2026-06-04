@@ -498,8 +498,8 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        backgroundColor: Colors.white,
+        elevation: 0.5,
         centerTitle: true,
         iconTheme: IconThemeData(color: primaryColor),
         title: Text(
@@ -513,9 +513,10 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
         actions: [
           _buildWalletBalanceChip(),
           IconButton(onPressed: () {}, icon: const Icon(Icons.favorite_border)),
+          const SizedBox(width: 8),
         ],
       ),
-      extendBodyBehindAppBar: true,
+      extendBodyBehindAppBar: false,
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('reviews')
@@ -547,6 +548,7 @@ class _PTDetailScreenState extends State<PTDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const SizedBox(height: 16),
                 PTHeaderSection(
                   avatar: avatar,
                   name: name,
