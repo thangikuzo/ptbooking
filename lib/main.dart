@@ -1,11 +1,13 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:ptbooking/screens/splash_screen.dart';
-import 'constants/app_colors.dart';
+import 'package:ptbooking/features/home/screens/splash_screen.dart';
+import 'package:ptbooking/core/constants/app_colors.dart';
 import 'firebase_options.dart'; // File này vừa được tạo tự động
 
-import 'services/notification_service.dart'; // Thêm import này
+import 'package:ptbooking/core/services/notification_service.dart'; // Thêm import này
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,13 +16,19 @@ void main() async {
   // Khởi tạo Notification Service
   await NotificationService().init();
 
-  await GoogleSignIn.instance.initialize(
-    serverClientId: "501388421930-610ost62oop0k4vu1p6pgigh1ej0s65p.apps.googleusercontent.com", // Web Client ID của bạn
-    // scopes: ['email', 'profile'], // Nếu cần thêm scopes (mặc định đã có)
-  );
+  if (kIsWeb || Platform.isAndroid || Platform.isIOS) {
+    try {
+      await GoogleSignIn.instance.initialize(
+        serverClientId: "501388421930-610ost62oop0k4vu1p6pgigh1ej0s65p.apps.googleusercontent.com", // Web Client ID của bạn
+        // scopes: ['email', 'profile'], // Nếu cần thêm scopes (mặc định đã có)
+      );
+    } catch (e) {
+      debugPrint("GoogleSignIn init error: $e");
+    }
+  }
   runApp(
     MaterialApp(
-      home: const SplashScreen(), // Đổi sang SplashScreen để check login tự động luôn sếp nhé
+      home: SplashScreen(), // Đổi sang SplashScreen để check login tự động luôn sếp nhé
       debugShowCheckedModeBanner: false,
 
       // 🔥 THÊM ĐOẠN THEME NÀY VÀO ĐỂ QUẢN LÝ APPBAR TOÀN HỆ THỐNG
