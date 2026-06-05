@@ -127,9 +127,15 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
         iconTheme: const IconThemeData(color: Colors.white),
         centerTitle: true,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.leaderboard, color: Colors.white),
-            tooltip: 'Bảng xếp hạng PT',
+          TextButton.icon(
+            icon: const Icon(Icons.leaderboard, color: Colors.amber, size: 20),
+            label: const Text(
+              'Top PT',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+            ),
             onPressed: () {
               Navigator.push(context, MaterialPageRoute(builder: (context) => const PTRankingScreen()));
             },
